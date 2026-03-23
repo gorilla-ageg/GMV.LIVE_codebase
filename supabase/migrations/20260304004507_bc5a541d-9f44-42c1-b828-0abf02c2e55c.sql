@@ -1,0 +1,1 @@
+CREATE OR REPLACE FUNCTION public.update_deal_timestamp() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$ LANGUAGE plpgsql SET search_path = public;
