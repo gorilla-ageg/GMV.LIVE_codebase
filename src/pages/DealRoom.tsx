@@ -12,8 +12,22 @@ import OfferModal from "@/components/deals/OfferModal";
 import ContractView from "@/components/deals/ContractView";
 import ShipmentTracker from "@/components/deals/ShipmentTracker";
 import AnalyticsTab from "@/components/deals/AnalyticsTab";
-import { ArrowLeft, MessageSquare, FileText, Package, BarChart3 } from "lucide-react";
+import { ArrowLeft, MessageSquare, FileText, Package, BarChart3, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { Tables, Enums } from "@/integrations/supabase/types";
+
+type Deal = Tables<"deals">;
+type DealStatus = Enums<"deal_status">;
+
+interface ConversationJoin {
+  id: string;
+  brand_user_id: string;
+  creator_user_id: string;
+}
+
+interface DealWithConversation extends Deal {
+  conversations: ConversationJoin;
+}
 
 const DealRoom = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,27 +38,32 @@ const DealRoom = () => {
   const [offerOpen, setOfferOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("chat");
 
-  const { data: deal, isLoading } = useQuery({
+  const { data: deal, isLoading, error: dealError } = useQuery({
     queryKey: ["deal", id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("deals")
-        .select("*, conversations(brand_user_id, creator_user_id, id)")
+        .select("*, conversations(id, brand_user_id, creator_user_id)")
         .eq("id", id!)
         .single();
       if (error) throw error;
-      return data;
+      return data as unknown as DealWithConversation;
     },
     enabled: !!id,
   });
 
-  const convo = (deal as any)?.conversations;
+  const convo = deal?.conversations;
   const isBrand = convo?.brand_user_id === user?.id;
 
   const { data: brandProfile } = useQuery({
     queryKey: ["profile", convo?.brand_user_id],
     queryFn: async () => {
-      const { data } = await supabase.from("public_profiles").select("display_name, avatar_url").eq("id", convo.brand_user_id).single();
+      const { data, error } = await supabase
+        .from("public_profiles")
+        .select("display_name, avatar_url")
+        .eq("id", convo!.brand_user_id)
+        .single();
+      if (error) throw error;
       return data;
     },
     enabled: !!convo?.brand_user_id,
@@ -53,7 +72,12 @@ const DealRoom = () => {
   const { data: creatorProfile } = useQuery({
     queryKey: ["profile", convo?.creator_user_id],
     queryFn: async () => {
-      const { data } = await supabase.from("public_profiles").select("display_name, avatar_url").eq("id", convo.creator_user_id).single();
+      const { data, error } = await supabase
+        .from("public_profiles")
+        .select("display_name, avatar_url")
+        .eq("id", convo!.creator_user_id)
+        .single();
+      if (error) throw error;
       return data;
     },
     enabled: !!convo?.creator_user_id,
@@ -62,7 +86,12 @@ const DealRoom = () => {
   const { data: escrow } = useQuery({
     queryKey: ["escrow", id],
     queryFn: async () => {
-      const { data } = await supabase.from("escrow_payments").select("*").eq("deal_id", id!).maybeSingle();
+      const { data, error } = await supabase
+        .from("escrow_payments")
+        .select("*")
+        .eq("deal_id", id!)
+        .maybeSingle();
+      if (error) throw error;
       return data;
     },
     enabled: !!id,
@@ -70,7 +99,7 @@ const DealRoom = () => {
 
   const sendOfferMutation = useMutation({
     mutationFn: async (offer: { rate: number; deliverables: string; liveDate: string; usageRights: string[]; note: string }) => {
-      await supabase.from("deal_offers").insert({
+      const { error: offerError } = await supabase.from("deal_offers").insert({
         deal_id: id!,
         sender_id: user!.id,
         rate: offer.rate,
@@ -82,61 +111,115 @@ const DealRoom = () => {
         usage_rights: offer.usageRights,
         note: offer.note || null,
         status: "pending",
-      } as any);
-      await supabase.from("messages").insert({
-        conversation_id: convo.id,
+      });
+      if (offerError) throw offerError;
+
+      const { error: msgError } = await supabase.from("messages").insert({
+        conversation_id: convo!.id,
         sender_id: user!.id,
         content: `New offer: $${offer.rate.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
         message_type: "offer",
         metadata: { offer_rate: offer.rate },
       });
+      if (msgError) throw msgError;
     },
     onSuccess: () => {
       setOfferOpen(false);
       queryClient.invalidateQueries({ queryKey: ["deal-offers", id] });
       queryClient.invalidateQueries({ queryKey: ["deal-messages", convo?.id] });
+      toast({ title: "Offer sent!" });
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onError: (err: Error) => toast({ title: "Error sending offer", description: err.message, variant: "destructive" }),
   });
 
   const fundEscrowMutation = useMutation({
     mutationFn: async () => {
-      await supabase.from("escrow_payments").insert({
-        deal_id: id!,
-        amount: Number(deal?.rate) || 0,
-        status: "funded" as any,
-        funded_at: new Date().toISOString(),
-      });
-      await supabase.from("deals").update({ status: "funded" as any }).eq("id", id!);
-      await supabase.from("messages").insert({
-        conversation_id: convo.id,
+      // Use the secure RPC function instead of manual insert
+      const { error: rpcError } = await supabase.rpc("fund_escrow", { _deal_id: id! });
+      if (rpcError) {
+        // Fallback to manual insert if RPC doesn't exist or fails
+        const { error: insertError } = await supabase.from("escrow_payments").insert({
+          deal_id: id!,
+          amount: Number(deal?.rate) || 0,
+          status: "funded",
+          funded_at: new Date().toISOString(),
+        });
+        if (insertError) throw insertError;
+
+        const { error: updateError } = await supabase
+          .from("deals")
+          .update({ status: "funded" as DealStatus })
+          .eq("id", id!);
+        if (updateError) throw updateError;
+      }
+
+      const { error: msgError } = await supabase.from("messages").insert({
+        conversation_id: convo!.id,
         sender_id: user!.id,
         content: `Escrow funded: $${Number(deal?.rate).toLocaleString("en-US", { minimumFractionDigits: 2 })} held securely. Brand can now ship the product.`,
         message_type: "system_event",
         metadata: { event_type: "escrow_funded" },
       });
+      if (msgError) throw msgError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["escrow", id] });
       queryClient.invalidateQueries({ queryKey: ["deal", id] });
+      queryClient.invalidateQueries({ queryKey: ["deal-messages", convo?.id] });
       toast({ title: "Escrow funded!" });
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onError: (err: Error) => toast({ title: "Error funding escrow", description: err.message, variant: "destructive" }),
   });
 
   const handleCta = () => {
     const status = deal?.status;
     if (status === "negotiating") { setOfferOpen(true); return; }
-    if ((status === "agreed" || status === "contracted" || status === "signed") && isBrand) { fundEscrowMutation.mutate(); return; }
+    // After agreement, direct to contract for signing first
+    if (status === "agreed" || status === "signed") { setActiveTab("contract"); return; }
+    // After both sign, brand funds escrow
+    if (status === "contracted" && isBrand) { fundEscrowMutation.mutate(); return; }
+    if (status === "contracted" && !isBrand) { setActiveTab("contract"); return; }
     if ((status === "escrow_funded" || status === "funded") && isBrand) { setActiveTab("shipment"); return; }
+    if ((status === "escrow_funded" || status === "funded") && !isBrand) { return; } // disabled CTA
     if (status === "shipped") { setActiveTab("shipment"); return; }
     if (status === "delivered" && !isBrand) { setActiveTab("analytics"); return; }
     if (status === "live" || status === "in_progress") { setActiveTab("analytics"); return; }
     if (status === "completed") { toast({ title: "Rating coming soon!" }); return; }
+    if (status === "disputed") { setActiveTab("chat"); return; }
   };
 
-  if (isLoading) return <AppLayout><p className="text-muted-foreground">Loading deal…</p></AppLayout>;
-  if (!deal || !convo) return <AppLayout><p className="text-muted-foreground">Deal not found.</p></AppLayout>;
+  if (isLoading) {
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (dealError) {
+    return (
+      <AppLayout>
+        <div className="text-center py-12 space-y-3">
+          <p className="text-destructive font-medium">Failed to load deal</p>
+          <p className="text-sm text-muted-foreground">{(dealError as Error).message}</p>
+          <Button variant="outline" onClick={() => navigate("/deals")}>Back to Deals</Button>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (!deal || !convo) {
+    return (
+      <AppLayout>
+        <div className="text-center py-12 space-y-3">
+          <p className="text-muted-foreground">Deal not found.</p>
+          <Button variant="outline" onClick={() => navigate("/deals")}>Back to Deals</Button>
+        </div>
+      </AppLayout>
+    );
+  }
 
   const otherParty = isBrand
     ? { name: creatorProfile?.display_name || "Creator", avatarUrl: creatorProfile?.avatar_url || undefined }

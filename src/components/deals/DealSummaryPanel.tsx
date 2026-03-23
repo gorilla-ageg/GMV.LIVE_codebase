@@ -1,11 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DollarSign, Calendar, FileText, Send, Package, Eye, Video, Star, Loader2 } from "lucide-react";
+import { DollarSign, Calendar, Send, Package, Eye, Video, Star, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import StatusBadge from "./StatusBadge";
 
 interface DealSummaryPanelProps {
-  deal: any;
+  deal: {
+    status: string;
+    rate?: number | null;
+    deliverables?: string | null;
+    live_date?: string | null;
+    usage_rights?: string[] | null;
+  };
   otherParty: { name: string; avatarUrl?: string };
   isBrand: boolean;
   escrowAmount?: number;
@@ -15,32 +21,45 @@ interface DealSummaryPanelProps {
 
 const getCta = (status: string, isBrand: boolean): { label: string; icon: React.ReactNode; disabled?: boolean } => {
   switch (status) {
-    case "negotiating": return isBrand
-      ? { label: "Send Offer", icon: <Send className="h-4 w-4" /> }
-      : { label: "Counter Offer", icon: <Send className="h-4 w-4" /> };
+    case "negotiating":
+      return isBrand
+        ? { label: "Send Offer", icon: <Send className="h-4 w-4" /> }
+        : { label: "Counter Offer", icon: <Send className="h-4 w-4" /> };
     case "agreed":
+    case "signed":
+      return isBrand
+        ? { label: "Sign & Fund Escrow", icon: <DollarSign className="h-4 w-4" /> }
+        : { label: "Sign Contract", icon: <DollarSign className="h-4 w-4" /> };
     case "contracted":
-    case "signed": return isBrand
-      ? { label: "Fund Escrow →", icon: <DollarSign className="h-4 w-4" /> }
-      : { label: "Awaiting payment…", icon: <Loader2 className="h-4 w-4 animate-spin" />, disabled: true };
+      return isBrand
+        ? { label: "Fund Escrow", icon: <DollarSign className="h-4 w-4" /> }
+        : { label: "Awaiting payment...", icon: <Loader2 className="h-4 w-4 animate-spin" />, disabled: true };
     case "escrow_funded":
-    case "funded": return isBrand
-      ? { label: "Mark as Shipped →", icon: <Package className="h-4 w-4" /> }
-      : { label: "Awaiting product…", icon: <Loader2 className="h-4 w-4 animate-spin" />, disabled: true };
-    case "shipped": return isBrand
-      ? { label: "View Tracking", icon: <Package className="h-4 w-4" /> }
-      : { label: "Track Package →", icon: <Package className="h-4 w-4" /> };
-    case "delivered": return isBrand
-      ? { label: "Awaiting live…", icon: <Loader2 className="h-4 w-4 animate-spin" />, disabled: true }
-      : { label: "Submit Stream →", icon: <Video className="h-4 w-4" /> };
+    case "funded":
+      return isBrand
+        ? { label: "Ship Product", icon: <Package className="h-4 w-4" /> }
+        : { label: "Awaiting product...", icon: <Loader2 className="h-4 w-4 animate-spin" />, disabled: true };
+    case "shipped":
+      return isBrand
+        ? { label: "View Tracking", icon: <Package className="h-4 w-4" /> }
+        : { label: "Track Package", icon: <Package className="h-4 w-4" /> };
+    case "delivered":
+      return isBrand
+        ? { label: "Awaiting live stream...", icon: <Loader2 className="h-4 w-4 animate-spin" />, disabled: true }
+        : { label: "Submit Stream Analytics", icon: <Video className="h-4 w-4" /> };
     case "in_progress":
-    case "live": return isBrand
-      ? { label: "View Analytics →", icon: <Eye className="h-4 w-4" /> }
-      : { label: "Submit Stream Link →", icon: <Video className="h-4 w-4" /> };
-    case "completed": return isBrand
-      ? { label: "Rate Creator →", icon: <Star className="h-4 w-4" /> }
-      : { label: "Rate Brand →", icon: <Star className="h-4 w-4" /> };
-    default: return { label: "View Deal", icon: <Eye className="h-4 w-4" /> };
+    case "live":
+      return isBrand
+        ? { label: "Review Analytics", icon: <Eye className="h-4 w-4" /> }
+        : { label: "View Analytics", icon: <Eye className="h-4 w-4" /> };
+    case "completed":
+      return isBrand
+        ? { label: "Rate Creator", icon: <Star className="h-4 w-4" /> }
+        : { label: "Rate Brand", icon: <Star className="h-4 w-4" /> };
+    case "disputed":
+      return { label: "View Dispute", icon: <Eye className="h-4 w-4" /> };
+    default:
+      return { label: "View Deal", icon: <Eye className="h-4 w-4" /> };
   }
 };
 
@@ -68,7 +87,7 @@ const DealSummaryPanel = ({ deal, otherParty, isBrand, escrowAmount, onCta, ctaL
       </div>
 
       {/* Deal terms */}
-      {deal.rate && (
+      {deal.rate != null && deal.rate > 0 && (
         <div className="space-y-1">
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Agreed Rate</p>
           <p className="text-lg font-bold flex items-center gap-1">
@@ -92,6 +111,13 @@ const DealSummaryPanel = ({ deal, otherParty, isBrand, escrowAmount, onCta, ctaL
             <Calendar className="h-3.5 w-3.5 text-blue-400" />
             {format(new Date(deal.live_date), "MMM d, yyyy")}
           </p>
+        </div>
+      )}
+
+      {deal.usage_rights && deal.usage_rights.length > 0 && (
+        <div className="space-y-1">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Usage Rights</p>
+          <p className="text-sm">{deal.usage_rights.join(", ")}</p>
         </div>
       )}
 

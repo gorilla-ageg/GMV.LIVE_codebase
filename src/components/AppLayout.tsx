@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, MessageSquare, Package, User, Settings } from "lucide-react";
+import { LogOut, MessageSquare, Package, User, Settings, Handshake } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const AppLayout = ({ children }: { children: ReactNode }) => {
@@ -59,10 +59,13 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
     <div className="min-h-screen bg-background">
       <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
-          <Link to="/feed" className="text-lg font-bold text-foreground">GMV</Link>
+          <Link to="/feed" className="text-lg font-bold text-foreground">GMB.live</Link>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" asChild className={navLinkClass("/feed")}>
               <Link to="/feed">Feed</Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild className={navLinkClass("/deals")}>
+              <Link to="/deals"><Handshake className="mr-1 h-4 w-4" />Deals</Link>
             </Button>
             <Button variant="ghost" size="sm" asChild className={navLinkClass("/messages")}>
               <Link to="/messages"><MessageSquare className="mr-1 h-4 w-4" />Messages</Link>

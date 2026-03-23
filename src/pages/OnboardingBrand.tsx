@@ -40,11 +40,18 @@ const RATE_RANGES = [
 ];
 
 const OnboardingBrand = () => {
-  const { user, refreshProfile } = useAuth();
+  const { user, loading, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
+
+  // Redirect unauthenticated users to auth
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/auth", { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   // Step 1 — Brand Basics
   const [brandName, setBrandName] = useState("");
@@ -245,6 +252,14 @@ const OnboardingBrand = () => {
     await refreshProfile();
     navigate(destination, { replace: true });
   };
+
+  if (loading || !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <OnboardingLayout

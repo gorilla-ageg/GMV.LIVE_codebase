@@ -52,7 +52,7 @@ const Register = () => {
               We sent a verification link to <strong>{email}</strong>. Click the link to activate your account, then come back and log in.
             </p>
             <Button variant="outline" asChild className="mt-2">
-              <Link to="/login">Go to Login</Link>
+              <Link to="/auth">Go to Login</Link>
             </Button>
           </CardContent>
         </Card>
@@ -64,7 +64,7 @@ const Register = () => {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <Link to="/" className="mb-2 text-xl font-bold text-foreground">gmv.live</Link>
+          <Link to="/" className="mb-2 text-xl font-bold text-foreground">GMB.live</Link>
           <CardTitle className="text-2xl">Create your account</CardTitle>
           <CardDescription>Join the live shopping network</CardDescription>
         </CardHeader>
@@ -116,7 +116,7 @@ const Register = () => {
             </Button>
             <p className="text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link to="/login" className="text-primary hover:underline">Sign in</Link>
+              <Link to="/auth" className="text-primary hover:underline">Sign in</Link>
             </p>
           </CardFooter>
         </form>

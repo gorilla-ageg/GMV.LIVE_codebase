@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import AppLayout from "@/components/AppLayout";
 import MultiImageUploader from "@/components/onboarding/MultiImageUploader";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, Trash2, ArrowLeft } from "lucide-react";
 
 const PLATFORM_OPTIONS = ["TikTok", "Instagram", "Amazon Live", "YouTube", "Facebook"];
 
@@ -36,7 +36,9 @@ const EditProduct = () => {
   const [commissionInfo, setCommissionInfo] = useState("");
   const [pastMonthGmv, setPastMonthGmv] = useState("");
   const [images, setImages] = useState<ImageItem[]>([]);
+  const [status, setStatus] = useState<string>("active");
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["edit-product", id],
@@ -66,6 +68,7 @@ const EditProduct = () => {
     setPlatforms(product.target_platforms || []);
     setCommissionInfo(product.commission_info || "");
     setPastMonthGmv(product.past_month_gmv?.toString() || "");
+    setStatus(product.status || "active");
     setImages(
       (product.images || []).map((url: string) => ({ file: null, previewUrl: url }))
     );
@@ -114,6 +117,7 @@ const EditProduct = () => {
           commission_info: commissionInfo,
           past_month_gmv: parseFloat(pastMonthGmv) || null,
           images: imageUrls,
+          status: status as "active" | "paused" | "closed",
         })
         .eq("id", id);
       if (error) throw error;
@@ -123,6 +127,21 @@ const EditProduct = () => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!id || !window.confirm("Are you sure you want to delete this product? This cannot be undone.")) return;
+    setDeleting(true);
+    try {
+      const { error } = await supabase.from("products").delete().eq("id", id);
+      if (error) throw error;
+      toast({ title: "Product deleted" });
+      navigate("/my-products");
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -138,9 +157,21 @@ const EditProduct = () => {
 
   return (
     <AppLayout>
+      <div className="mx-auto max-w-lg mb-4">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/my-products")} className="text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="mr-1 h-4 w-4" /> Back to Products
+        </Button>
+      </div>
       <Card className="mx-auto max-w-lg">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Edit Product</CardTitle>
+          <Badge
+            variant={status === "active" ? "default" : "secondary"}
+            className="cursor-pointer select-none"
+            onClick={() => setStatus(status === "active" ? "paused" : "active")}
+          >
+            {status === "active" ? "Active" : "Paused"} (click to toggle)
+          </Badge>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -197,6 +228,16 @@ const EditProduct = () => {
             </div>
             <Button type="submit" className="w-full" disabled={submitting}>
               {submitting ? "Saving…" : "Save Changes"}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              className="w-full"
+              disabled={deleting}
+              onClick={handleDelete}
+            >
+              {deleting ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Trash2 className="mr-1 h-4 w-4" />}
+              Delete Product
             </Button>
           </form>
         </CardContent>

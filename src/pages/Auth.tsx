@@ -19,6 +19,8 @@ const Auth = () => {
   const [displayName, setDisplayName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [tab, setTab] = useState<string>("signup");
+
+  // Redirect authenticated users to the appropriate page
   useEffect(() => {
     if (!loading && user) {
       navigate(onboardingCompleted ? "/feed" : "/onboarding/role", { replace: true });
@@ -31,12 +33,16 @@ const Auth = () => {
       toast({ title: "Name required", description: "Please enter your name.", variant: "destructive" });
       return;
     }
+    if (password.length < 6) {
+      toast({ title: "Password too short", description: "Password must be at least 6 characters.", variant: "destructive" });
+      return;
+    }
     setSubmitting(true);
     try {
-      await signUp(email, password, displayName);
-      toast({ title: "Check your email", description: "We sent you a verification link." });
+      await signUp(email.trim(), password, displayName.trim());
+      toast({ title: "Check your email", description: "We sent you a verification link. Please confirm your email to continue." });
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: "Sign-up failed", description: err.message, variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -44,15 +50,21 @@ const Auth = () => {
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.trim() || !password) {
+      toast({ title: "Missing fields", description: "Please enter your email and password.", variant: "destructive" });
+      return;
+    }
     setSubmitting(true);
     try {
-      await signIn(email, password);
+      await signIn(email.trim(), password);
+      // Redirect is handled by the useEffect above once user state updates
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: "Login failed", description: err.message, variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
   };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -61,6 +73,7 @@ const Auth = () => {
     );
   }
 
+  // User is authenticated — useEffect will redirect, show nothing in the meantime
   if (user) return null;
 
   return (
@@ -111,7 +124,7 @@ const Auth = () => {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
+                    placeholder="Min. 6 characters"
                     required
                     minLength={6}
                     className="min-h-[44px]"
@@ -144,7 +157,7 @@ const Auth = () => {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
+                    placeholder="Your password"
                     required
                     className="min-h-[44px]"
                   />
@@ -157,7 +170,6 @@ const Auth = () => {
           </Tabs>
         </CardContent>
       </Card>
-
     </div>
   );
 };

@@ -63,7 +63,7 @@ const HeroSection = () => {
             </h1>
 
             <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
-              Stop scrambling for live hosts. GMV matches your brand with
+              Stop scrambling for live hosts. GMB.live matches your brand with
               vetted creators who sell on camera, so you can go live faster and
               sell more.
             </p>

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navLinks = [
   { label: "For Brands", to: "/for-brands" },
@@ -12,6 +13,7 @@ const navLinks = [
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user } = useAuth();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-background/80 border-b border-border/30">
@@ -21,7 +23,7 @@ const Navbar = () => {
           className="text-xl font-bold tracking-tight text-foreground"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          🤩 gmv.live
+          GMB.live
         </Link>
 
         <div className="hidden items-center gap-8 md:flex">
@@ -37,9 +39,15 @@ const Navbar = () => {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Button size="sm" className="rounded-full" asChild>
-            <Link to="/auth">Get Started</Link>
-          </Button>
+          {user ? (
+            <Button size="sm" className="rounded-full" asChild>
+              <Link to="/feed">Go to Dashboard</Link>
+            </Button>
+          ) : (
+            <Button size="sm" className="rounded-full" asChild>
+              <Link to="/auth">Get Started</Link>
+            </Button>
+          )}
         </div>
 
         <button
@@ -64,9 +72,15 @@ const Navbar = () => {
             </Link>
           ))}
           <div className="mt-3 flex flex-col gap-2">
-            <Button size="sm" className="rounded-full" asChild>
-              <Link to="/auth" onClick={() => setMobileOpen(false)}>Get Started</Link>
-            </Button>
+            {user ? (
+              <Button size="sm" className="rounded-full" asChild>
+                <Link to="/feed" onClick={() => setMobileOpen(false)}>Go to Dashboard</Link>
+              </Button>
+            ) : (
+              <Button size="sm" className="rounded-full" asChild>
+                <Link to="/auth" onClick={() => setMobileOpen(false)}>Get Started</Link>
+              </Button>
+            )}
           </div>
         </div>
       )}

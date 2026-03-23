@@ -88,7 +88,7 @@ const Waitlist = () => {
         <Card className="w-full max-w-md text-center border-border bg-card">
           <CardHeader>
             <Link to="/" className="mb-2 text-xl font-bold text-foreground hover:text-primary transition-colors">
-              🤩 gmv.live
+              GMB.live
             </Link>
             <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
               <CheckCircle2 className="h-7 w-7 text-primary" />
@@ -114,7 +114,7 @@ const Waitlist = () => {
         <Card className="border-border bg-card">
           <CardHeader className="text-center">
             <Link to="/" className="mb-2 text-xl font-bold text-foreground hover:text-primary transition-colors">
-              🤩 gmv.live
+              GMB.live
             </Link>
             <CardTitle className="text-2xl">Join the Waitlist</CardTitle>
             <CardDescription>

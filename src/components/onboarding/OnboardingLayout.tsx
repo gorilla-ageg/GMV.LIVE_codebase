@@ -42,7 +42,7 @@ const OnboardingLayout = ({
               </button>
             )}
             <Link to="/" className="text-xl font-bold text-foreground">
-              🤩 gmv.live
+              GMB.live
             </Link>
           </div>
           <div className="flex items-center gap-4">

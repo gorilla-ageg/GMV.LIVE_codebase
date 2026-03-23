@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, Calendar, FileText, Shield } from "lucide-react";
+import { DollarSign, Calendar, FileText, Shield, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -39,6 +39,7 @@ const OfferCard = ({
             status === "rejected" && "text-destructive border-destructive/30",
             status === "countered" && "text-amber-400 border-amber-500/30",
             status === "pending" && "text-blue-400 border-blue-500/30",
+            status === "expired" && "text-muted-foreground border-border",
           )}>{status}</Badge>
         </div>
 
@@ -89,8 +90,12 @@ const OfferCard = ({
 
         {showActions && (
           <div className="flex gap-2 pt-1">
-            <Button size="sm" onClick={onAccept} disabled={isPending} className="flex-1">Accept</Button>
-            <Button size="sm" variant="outline" onClick={onCounter} disabled={isPending} className="flex-1">Counter</Button>
+            <Button size="sm" onClick={onAccept} disabled={isPending} className="flex-1">
+              {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Accept"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={onCounter} disabled={isPending} className="flex-1">
+              Counter
+            </Button>
           </div>
         )}
       </div>

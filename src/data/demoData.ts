@@ -1,4 +1,4 @@
-// Realistic demo data for GMV.live — modeled after top TikTok Shop brands & creators
+// Realistic demo data for GMB.live — modeled after top TikTok Shop brands & creators
 // Images use local assets in /public to guarantee they always load
 
 export interface DemoProduct {

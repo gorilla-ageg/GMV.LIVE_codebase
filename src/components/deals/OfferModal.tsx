@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Loader2 } from "lucide-react";
 import ChipSelector from "@/components/onboarding/ChipSelector";
 
 const USAGE_OPTIONS = ["Organic only", "Paid ads", "Whitelisting"];
@@ -18,11 +19,22 @@ interface OfferModalProps {
 }
 
 const OfferModal = ({ open, onClose, onSubmit, isPending, defaultValues, title = "Send Offer" }: OfferModalProps) => {
-  const [rate, setRate] = useState(defaultValues?.rate?.toString() || "");
-  const [deliverables, setDeliverables] = useState(defaultValues?.deliverables || "");
-  const [liveDate, setLiveDate] = useState(defaultValues?.liveDate?.split("T")[0] || "");
-  const [usageRights, setUsageRights] = useState<string[]>(defaultValues?.usageRights || []);
-  const [note, setNote] = useState(defaultValues?.note || "");
+  const [rate, setRate] = useState("");
+  const [deliverables, setDeliverables] = useState("");
+  const [liveDate, setLiveDate] = useState("");
+  const [usageRights, setUsageRights] = useState<string[]>([]);
+  const [note, setNote] = useState("");
+
+  // Reset form when modal opens or defaultValues change
+  useEffect(() => {
+    if (open) {
+      setRate(defaultValues?.rate?.toString() || "");
+      setDeliverables(defaultValues?.deliverables || "");
+      setLiveDate(defaultValues?.liveDate?.split("T")[0] || "");
+      setUsageRights(defaultValues?.usageRights || []);
+      setNote(defaultValues?.note || "");
+    }
+  }, [open, defaultValues]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,8 +76,14 @@ const OfferModal = ({ open, onClose, onSubmit, isPending, defaultValues, title =
             <Input placeholder="Looking forward to working together!" value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" disabled={isPending || !rate || !deliverables}>{isPending ? "Sending…" : title}</Button>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>Cancel</Button>
+            <Button type="submit" disabled={isPending || !rate || !deliverables}>
+              {isPending ? (
+                <><Loader2 className="h-4 w-4 animate-spin mr-2" />Sending...</>
+              ) : (
+                title
+              )}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

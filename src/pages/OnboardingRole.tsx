@@ -1,34 +1,69 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "react-router-dom";
-import { Tag, Video } from "lucide-react";
+import { Tag, Video, Loader2 } from "lucide-react";
 
 const OnboardingRole = () => {
-  const { user, refreshProfile } = useAuth();
+  const { user, loading, onboardingCompleted } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Redirect unauthenticated users to auth
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/auth", { replace: true });
+    }
+  }, [user, loading, navigate]);
+
+  // Redirect already-onboarded users to feed
+  useEffect(() => {
+    if (!loading && user && onboardingCompleted) {
+      navigate("/feed", { replace: true });
+    }
+  }, [user, loading, onboardingCompleted, navigate]);
 
   const selectRole = async (role: "brand" | "creator") => {
     if (!user) return;
     try {
-      // Update profile role
-      await supabase.from("profiles").update({ role, onboarding_step: `${role}-1` }).eq("id", user.id);
-      // Set role via security definer function
-      await supabase.rpc("set_user_role", { _role: role });
-      await refreshProfile();
+      // Update profile with chosen role and onboarding step
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ role, onboarding_step: `${role}-1` })
+        .eq("id", user.id);
+      if (profileError) throw profileError;
+
+      // Set role via security definer function (populates user_roles table)
+      const { error: rpcError } = await supabase.rpc("set_user_role", { _role: role });
+      if (rpcError) throw rpcError;
+
       navigate(`/onboarding/${role}`);
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      console.error("Role selection error:", err);
+      toast({
+        title: "Error setting role",
+        description: err.message ?? "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) return null;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <div className="border-b border-border bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-2xl items-center px-4">
-          <Link to="/" className="text-xl font-bold text-foreground">🤩 gmv.live</Link>
+          <Link to="/" className="text-xl font-bold text-foreground">GMB.live</Link>
         </div>
       </div>
 

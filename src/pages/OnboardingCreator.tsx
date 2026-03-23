@@ -33,15 +33,22 @@ const EXPERIENCE_LEVELS = [
 
 const AFFILIATE_OPTIONS = [
   { value: "yes", title: "Yes, I have one", description: "I'm already accepted into TikTok Shop", icon: CheckCircle2 },
-  { value: "need_one", title: "I need one", description: "I'd like gmv.live to help me get set up", icon: HelpCircle },
+  { value: "need_one", title: "I need one", description: "I'd like GMB.live to help me get set up", icon: HelpCircle },
 ] as const;
 
 const OnboardingCreator = () => {
-  const { user, refreshProfile } = useAuth();
+  const { user, loading, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
+
+  // Redirect unauthenticated users to auth
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/auth", { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   // Step 1
   const [firstName, setFirstName] = useState("");
@@ -210,6 +217,14 @@ const OnboardingCreator = () => {
 
   const goBack = () => setStep((s) => Math.max(1, s - 1));
 
+  if (loading || !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <OnboardingLayout
       currentStep={step}
@@ -231,7 +246,7 @@ const OnboardingCreator = () => {
       {step === 1 && (
         <div className="space-y-8">
           <div className="text-center">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Welcome to gmv.live 👋</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Welcome to GMB.live 👋</h1>
             <p className="mt-2 text-lg text-muted-foreground">Let's set up your creator profile</p>
           </div>
 
