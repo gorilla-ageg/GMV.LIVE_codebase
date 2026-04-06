@@ -549,6 +549,7 @@ export type Database = {
       }
       products: {
         Row: {
+          affiliate_link: string | null
           brand_id: string
           budget_max: number | null
           budget_min: number | null
@@ -565,6 +566,7 @@ export type Database = {
           title: string
         }
         Insert: {
+          affiliate_link?: string | null
           brand_id: string
           budget_max?: number | null
           budget_min?: number | null
@@ -581,6 +583,7 @@ export type Database = {
           title: string
         }
         Update: {
+          affiliate_link?: string | null
           brand_id?: string
           budget_max?: number | null
           budget_min?: number | null

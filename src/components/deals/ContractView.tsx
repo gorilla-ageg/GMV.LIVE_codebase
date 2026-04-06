@@ -126,14 +126,16 @@ const ContractView = ({ dealId, conversationId }: ContractViewProps) => {
           .eq("id", dealId);
         if (dealErr) throw dealErr;
 
-        const { error: msgErr } = await supabase.from("messages").insert({
-          conversation_id: conversationId,
-          sender_id: user!.id,
-          content: "Contract signed by both parties. Brand: please fund escrow to proceed.",
-          message_type: "system_event",
-          metadata: { event_type: "contract_signed" },
-        });
-        if (msgErr) throw msgErr;
+        // System message — best-effort
+        if (conversationId) {
+          await supabase.from("messages").insert({
+            conversation_id: conversationId,
+            sender_id: user!.id,
+            content: "Contract signed by both parties. Brand: please fund escrow to proceed.",
+            message_type: "system_event",
+            metadata: { event_type: "contract_signed" },
+          });
+        }
       } else {
         // Only one party signed so far
         const { error: dealErr } = await supabase
@@ -142,14 +144,16 @@ const ContractView = ({ dealId, conversationId }: ContractViewProps) => {
           .eq("id", dealId);
         if (dealErr) throw dealErr;
 
-        const { error: msgErr } = await supabase.from("messages").insert({
-          conversation_id: conversationId,
-          sender_id: user!.id,
-          content: `${signName.trim()} has signed the contract.`,
-          message_type: "system_event",
-          metadata: { event_type: "contract_signed" },
-        });
-        if (msgErr) throw msgErr;
+        // System message — best-effort
+        if (conversationId) {
+          await supabase.from("messages").insert({
+            conversation_id: conversationId,
+            sender_id: user!.id,
+            content: `${signName.trim()} has signed the contract.`,
+            message_type: "system_event",
+            metadata: { event_type: "contract_signed" },
+          });
+        }
       }
     },
     onSuccess: () => {

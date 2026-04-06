@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import GmvStoreTab from "@/components/admin/GmvStoreTab";
 import {
   Users, Package, Handshake, CheckCircle2,
   Ban, Play, Pause, ShieldCheck, Trash2, TrendingUp,
@@ -270,6 +271,9 @@ const AdminDashboard = () => {
         {/* ─── Tabs ─── */}
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
+            <TabsTrigger value="gmv-store" className="gap-1.5">
+              <img src="/images/gmv-logo-mark.svg" alt="" className="h-3.5 w-3.5" /> GMV Store
+            </TabsTrigger>
             <TabsTrigger value="users">Users ({totalUsers})</TabsTrigger>
             <TabsTrigger value="products">Products ({totalProducts})</TabsTrigger>
             <TabsTrigger value="deals">Deals ({totalDeals})</TabsTrigger>
@@ -283,6 +287,11 @@ const AdminDashboard = () => {
               )}
             </TabsTrigger>
           </TabsList>
+
+          {/* ── GMV Store ── */}
+          <TabsContent value="gmv-store">
+            <GmvStoreTab />
+          </TabsContent>
 
           {/* ── Users ── */}
           <TabsContent value="users" className="space-y-2 mt-4">

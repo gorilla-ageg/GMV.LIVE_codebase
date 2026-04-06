@@ -170,15 +170,14 @@ const DealChat = ({
       });
       if (contractErr) throw contractErr;
 
-      // System message
-      const { error: msgErr } = await supabase.from("messages").insert({
+      // System message — best-effort, don't block the accept
+      await supabase.from("messages").insert({
         conversation_id: conversationId,
         sender_id: user!.id,
         content: "Offer accepted. Contract has been generated — please review and sign.",
         message_type: "system_event",
         metadata: { event_type: "deal_agreed" },
       });
-      if (msgErr) throw msgErr;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deal-offers", dealId] });
@@ -222,16 +221,15 @@ const DealChat = ({
       // Ensure deal is in negotiating status
       await supabase.from("deals").update({ status: "negotiating" }).eq("id", dealId);
 
-      // System message
+      // System message — best-effort
       const senderLabel = user!.id === brandUserId ? brandName : creatorName;
-      const { error: msgErr } = await supabase.from("messages").insert({
+      await supabase.from("messages").insert({
         conversation_id: conversationId,
         sender_id: user!.id,
         content: `${senderLabel} sent a counter offer: $${offer.rate.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
         message_type: "system_event",
         metadata: { event_type: "counter_offer", offer_rate: offer.rate },
       });
-      if (msgErr) throw msgErr;
     },
     onSuccess: () => {
       setCounterOpen(false);

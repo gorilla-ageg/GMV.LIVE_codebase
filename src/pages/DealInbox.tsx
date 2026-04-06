@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/deals/StatusBadge";
+import { getDisplayBrand, GMV_STORE_BRAND_ID } from "@/lib/gmv-store";
 import { Plus, DollarSign, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { Enums } from "@/integrations/supabase/types";
@@ -127,14 +128,20 @@ const DealInbox = () => {
     const isBrand = convo?.brand_user_id === user?.id;
     const other = isBrand ? convo?.creator_profile : convo?.brand_profile;
     const otherId = isBrand ? convo?.creator_user_id : convo?.brand_user_id;
-    const displayName = other?.display_name || (otherId ? nameLookup?.[otherId] : null) || (isBrand ? "Creator" : "Brand");
+    const rawName = other?.display_name || (otherId ? nameLookup?.[otherId] : null) || (isBrand ? "Creator" : "Brand");
+
+    // If the other party is GMV Store, override branding
+    const isGmvStore = !isBrand && convo?.brand_user_id === GMV_STORE_BRAND_ID;
+    const brandOverride = isGmvStore ? getDisplayBrand(GMV_STORE_BRAND_ID) : null;
+    const displayName = brandOverride?.name || rawName;
+    const displayAvatar = brandOverride?.avatar || other?.avatar_url || undefined;
 
     return (
       <Link key={deal.id} to={`/deals/${deal.id}`}>
         <Card className="border-border hover:border-primary/30 transition-colors cursor-pointer">
           <CardContent className="p-4 flex items-center gap-4">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={other?.avatar_url ?? undefined} />
+              <AvatarImage src={displayAvatar} />
               <AvatarFallback className="bg-secondary text-foreground">{displayName.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">

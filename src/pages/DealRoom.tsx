@@ -16,6 +16,7 @@ import AnalyticsTab from "@/components/deals/AnalyticsTab";
 import { ArrowLeft, MessageSquare, FileText, DollarSign, Package, BarChart3, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Tables, Enums } from "@/integrations/supabase/types";
+import { getDisplayBrand, GMV_STORE_BRAND_ID } from "@/lib/gmv-store";
 
 type Deal = Tables<"deals">;
 type DealStatus = Enums<"deal_status">;
@@ -232,9 +233,17 @@ const DealRoom = () => {
     );
   }
 
-  const otherParty = isBrand
-    ? { name: creatorProfile?.display_name || "Creator", avatarUrl: creatorProfile?.avatar_url || undefined }
-    : { name: brandProfile?.display_name || "Brand", avatarUrl: brandProfile?.avatar_url || undefined };
+  const otherParty = (() => {
+    if (isBrand) {
+      return { name: creatorProfile?.display_name || "Creator", avatarUrl: creatorProfile?.avatar_url || undefined };
+    }
+    // If the brand side is GMV Store, override display
+    if (convo?.brand_user_id === GMV_STORE_BRAND_ID) {
+      const b = getDisplayBrand(GMV_STORE_BRAND_ID);
+      return { name: b.name, avatarUrl: b.avatar };
+    }
+    return { name: brandProfile?.display_name || "Brand", avatarUrl: brandProfile?.avatar_url || undefined };
+  })();
 
   return (
     <AppLayout>

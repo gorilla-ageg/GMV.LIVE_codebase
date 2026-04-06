@@ -30,7 +30,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", path: "/dashboard", icon: <LayoutDashboard className="h-5 w-5" />, roles: ["brand", "creator"] },
   { label: "Browse Creators", path: "/browse", icon: <Search className="h-5 w-5" />, roles: ["brand"] },
   { label: "Browse Products", path: "/browse", icon: <Search className="h-5 w-5" />, roles: ["creator"] },
-  { label: "Deals", path: "/deals", icon: <Handshake className="h-5 w-5" />, roles: ["brand", "creator"] },
+  { label: "Deals", path: "/deals", icon: <Handshake className="h-5 w-5" />, roles: ["brand", "creator", "admin"] },
   { label: "Products", path: "/my-products", icon: <Package className="h-5 w-5" />, roles: ["brand"] },
   { label: "Profile", path: "/profile", icon: <User className="h-5 w-5" />, roles: ["brand", "creator"] },
   { label: "Settings", path: "/settings/profile", icon: <Settings className="h-5 w-5" />, roles: ["brand", "creator"] },
@@ -42,6 +42,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const logoPath = role === "admin" ? "/admin" : "/dashboard";
   const [collapsed, setCollapsed] = useState(false);
 
   const { data: profile } = useQuery({
@@ -85,12 +86,12 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
         collapsed ? "h-16 justify-center" : "h-16 justify-between"
       )}>
         {!collapsed ? (
-          <Link to="/dashboard" className="flex items-center gap-2.5 text-xl font-bold text-foreground">
+          <Link to={logoPath} className="flex items-center gap-2.5 text-xl font-bold text-foreground">
             <img src="/images/gmv-logo-mark.svg" alt="GMV.live" className="h-10 w-10" />
             <span>GMV<span className="font-normal text-muted-foreground">.live</span></span>
           </Link>
         ) : (
-          <Link to="/dashboard" className="flex items-center justify-center">
+          <Link to={logoPath} className="flex items-center justify-center">
             <img src="/images/gmv-logo-mark.svg" alt="GMV.live" className="h-11 w-11" />
           </Link>
         )}
@@ -221,7 +222,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
           >
             <Menu className="h-6 w-6" />
           </button>
-          <Link to="/dashboard" className="flex items-center gap-2 text-lg font-bold text-foreground">
+          <Link to={logoPath} className="flex items-center gap-2 text-lg font-bold text-foreground">
             <img src="/images/gmv-logo-mark.svg" alt="GMV.live" className="h-7 w-7" />
             <span>GMV<span className="font-normal text-muted-foreground">.live</span></span>
           </Link>

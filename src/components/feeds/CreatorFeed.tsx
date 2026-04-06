@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Link } from "react-router-dom";
 import { Search, DollarSign, TrendingUp, Package } from "lucide-react";
+import { getDisplayBrand } from "@/lib/gmv-store";
 
 
 const CATEGORY_OPTIONS = ["Beauty", "Tech", "Fashion", "Health", "Home", "Food", "Pets", "Fitness"];
@@ -207,18 +208,23 @@ const CreatorFeed = () => {
                   </div>
 
                   {/* Brand avatar + product title */}
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
-                      <AvatarImage src={product.public_profiles?.avatar_url} />
-                      <AvatarFallback className="text-xs">
-                        {(product.public_profiles?.display_name || "B").slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="truncate text-base font-semibold text-foreground">{product.title}</h3>
-                      <p className="text-sm text-muted-foreground">by {product.public_profiles?.display_name || "Brand"}</p>
-                    </div>
-                  </div>
+                  {(() => {
+                    const brand = getDisplayBrand(product.brand_id, product.public_profiles?.display_name, product.public_profiles?.avatar_url);
+                    return (
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
+                          <AvatarImage src={brand.avatar} />
+                          <AvatarFallback className="text-xs">
+                            {brand.name.slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="truncate text-base font-semibold text-foreground">{product.title}</h3>
+                          <p className="text-sm text-muted-foreground">by {brand.name}</p>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Description */}
                   <p className="line-clamp-2 text-sm text-muted-foreground">{product.description}</p>

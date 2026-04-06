@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ArrowRight, Sparkles, Shield, Zap } from "lucide-react";
+import { Loader2, ArrowRight, Sparkles, Shield, Zap, Eye, EyeOff } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
   const { user, role, onboardingCompleted, loading, signUp, signIn } = useAuth();
@@ -18,7 +19,25 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [tab, setTab] = useState<string>(searchParams.get("tab") === "login" ? "login" : "signup");
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      toast({ title: "Enter your email first", description: "Type your email above, then click Forgot Password.", variant: "destructive" });
+      return;
+    }
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+      if (error) throw error;
+      toast({ title: "Reset link sent!", description: "Check your email for a password reset link." });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Something went wrong";
+      toast({ title: "Error", description: message, variant: "destructive" });
+    }
+  };
 
   useEffect(() => {
     if (loading || !user) return;
@@ -193,16 +212,26 @@ const Auth = () => {
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="signup-password" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Password</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Min. 6 characters"
-                    required
-                    minLength={6}
-                    className="h-12 bg-secondary/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 text-base"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="signup-password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Min. 6 characters"
+                      required
+                      minLength={6}
+                      className="h-12 bg-secondary/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 text-base pr-12"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 <Button type="submit" disabled={submitting} className="w-full h-12 text-base font-semibold gap-2">
                   {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><span>Get Started</span><ArrowRight className="h-4 w-4" /></>}
@@ -225,16 +254,35 @@ const Auth = () => {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="login-password" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Password</Label>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Your password"
-                    required
-                    className="h-12 bg-secondary/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 text-base"
-                  />
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="login-password" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Password</Label>
+                    <button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      className="text-xs text-primary hover:underline font-medium"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <Input
+                      id="login-password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Your password"
+                      required
+                      className="h-12 bg-secondary/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 text-base pr-12"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 <Button type="submit" disabled={submitting} className="w-full h-12 text-base font-semibold gap-2">
                   {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><span>Sign In</span><ArrowRight className="h-4 w-4" /></>}

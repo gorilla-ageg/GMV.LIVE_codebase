@@ -10,6 +10,7 @@ import {
   DollarSign, Handshake, Video, User,
   ArrowRight, Loader2, Package, AlertTriangle,
 } from "lucide-react";
+import { getDisplayBrand } from "@/lib/gmv-store";
 
 const STATUS_ORDER = [
   "negotiating", "agreed", "contracted", "signed",
@@ -65,7 +66,7 @@ const CreatorDashboard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, title, images, category, budget_min, budget_max, public_profiles!products_brand_profile_fkey(display_name, avatar_url)")
+        .select("id, title, images, category, brand_id, budget_min, budget_max, public_profiles!products_brand_profile_fkey(display_name, avatar_url)")
         .eq("status", "active")
         .order("created_at", { ascending: false })
         .limit(6);
@@ -205,9 +206,7 @@ const CreatorDashboard = () => {
                           {product.title}
                         </h3>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          by {(product as Record<string, unknown>).public_profiles
-                            ? ((product as Record<string, unknown>).public_profiles as { display_name: string }).display_name
-                            : "Brand"}
+                          by {getDisplayBrand(product.brand_id, ((product as Record<string, unknown>).public_profiles as { display_name?: string } | undefined)?.display_name).name}
                         </p>
                         <div className="mt-1 flex items-center gap-2">
                           {product.category && (

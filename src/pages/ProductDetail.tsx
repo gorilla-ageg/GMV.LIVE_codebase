@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import AppLayout from "@/components/AppLayout";
+import { getDisplayBrand } from "@/lib/gmv-store";
 import {
   ArrowLeft,
   MessageSquare,
@@ -124,8 +125,9 @@ const ProductDetail = () => {
     );
   }
 
-  const profile = (product as any).public_profiles || (product as any).profiles;
-  const brandName = profile?.display_name || "Brand";
+  const profile = (product as Record<string, unknown>).public_profiles as { display_name?: string; avatar_url?: string } | undefined;
+  const brandDisplay = getDisplayBrand(product.brand_id, profile?.display_name, profile?.avatar_url);
+  const brandName = brandDisplay.name;
   const initials = brandName.slice(0, 2).toUpperCase();
   const heroImage = product.images?.[0];
   const galleryImages = product.images?.filter(Boolean) || [];
@@ -193,7 +195,7 @@ const ProductDetail = () => {
         {/* Avatar + Name + CTA row */}
         <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-16 relative z-10 px-2">
           <Avatar className="h-28 w-28 border-4 border-background shadow-xl ring-2 ring-primary/30">
-            <AvatarImage src={profile?.avatar_url} alt={brandName} />
+            <AvatarImage src={brandDisplay.avatar} alt={brandName} />
             <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">
               {initials}
             </AvatarFallback>

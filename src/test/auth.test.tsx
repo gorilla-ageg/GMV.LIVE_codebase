@@ -20,7 +20,7 @@ vi.mock("@/contexts/AuthContext", () => ({
 
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom");
-  return { ...actual, useNavigate: () => mockNavigate };
+  return { ...actual, useNavigate: () => mockNavigate, useSearchParams: () => [new URLSearchParams(), vi.fn()] };
 });
 
 // Mock toast
@@ -49,8 +49,7 @@ describe("Auth Page", () => {
 
   it("renders GMV.live branding", () => {
     renderAuth();
-    expect(screen.getByText("Welcome to GMV.live")).toBeInTheDocument();
-    expect(screen.getByText("GMV.live")).toBeInTheDocument();
+    expect(screen.getByText("Create your account")).toBeInTheDocument();
   });
 
   it("does not render Google OAuth button", () => {
@@ -77,7 +76,7 @@ describe("Auth Page", () => {
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "test@example.com" } });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "password123" } });
 
-    const form = screen.getByText("Create Account").closest("form")!;
+    const form = screen.getByText("Get Started").closest("form")!;
     fireEvent.submit(form);
 
     await waitFor(() => {
@@ -93,7 +92,7 @@ describe("Auth Page", () => {
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "new@test.com" } });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "password123" } });
 
-    const form = screen.getByText("Create Account").closest("form")!;
+    const form = screen.getByText("Get Started").closest("form")!;
     fireEvent.submit(form);
 
     await waitFor(() => {
@@ -111,7 +110,7 @@ describe("Auth Page", () => {
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "taken@test.com" } });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "password123" } });
 
-    const form = screen.getByText("Create Account").closest("form")!;
+    const form = screen.getByText("Get Started").closest("form")!;
     fireEvent.submit(form);
 
     await waitFor(() => {
@@ -125,13 +124,13 @@ describe("Auth Page", () => {
     });
   });
 
-  it("shows Create Account and Log In buttons", () => {
+  it("shows Get Started button", () => {
     renderAuth();
-    expect(screen.getByText("Create Account")).toBeInTheDocument();
+    expect(screen.getByText("Get Started")).toBeInTheDocument();
   });
 
   it("renders description text", () => {
     renderAuth();
-    expect(screen.getByText("Connect brands with live-shopping hosts")).toBeInTheDocument();
+    expect(screen.getByText("Start connecting with live-shopping creators")).toBeInTheDocument();
   });
 });
