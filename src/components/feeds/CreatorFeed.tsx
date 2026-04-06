@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Link } from "react-router-dom";
 import { Search, DollarSign, TrendingUp, Package } from "lucide-react";
-import { DEMO_PRODUCTS } from "@/data/demoData";
+
 
 const CATEGORY_OPTIONS = ["Beauty", "Tech", "Fashion", "Health", "Home", "Food", "Pets", "Fitness"];
 const PLATFORM_OPTIONS = ["TikTok", "Instagram", "YouTube", "Facebook", "Amazon Live"];
@@ -35,21 +35,6 @@ const CreatorFeed = () => {
 
       const { data, error } = await q;
       if (error) throw error;
-      // Only merge demo products in development
-      if (import.meta.env.DEV) {
-        const demoMapped = DEMO_PRODUCTS
-          .filter((d) => {
-            if (!search) return true;
-            const s = search.toLowerCase();
-            return (
-              d.title.toLowerCase().includes(s) ||
-              d.category.toLowerCase().includes(s) ||
-              (d.description || "").toLowerCase().includes(s)
-            );
-          })
-          .map((d) => ({ ...d }));
-        return [...(data || []), ...demoMapped];
-      }
       return data || [];
     },
   });
@@ -58,7 +43,7 @@ const CreatorFeed = () => {
     setter(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
   };
 
-  const filtered = products?.filter((p: any) => {
+  const filtered = products?.filter((p: typeof products[number]) => {
     if (selectedCategories.length > 0 && !selectedCategories.includes(p.category)) return false;
     if (selectedPlatforms.length > 0 && !p.target_platforms?.some((tp: string) => selectedPlatforms.includes(tp))) return false;
     const min = p.budget_min ?? 0;
@@ -177,7 +162,7 @@ const CreatorFeed = () => {
           <p className="py-12 text-center text-muted-foreground">No products match your filters. Try adjusting your search or clearing filters.</p>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {filtered?.map((product: any) => (
+            {filtered?.map((product) => (
               <Link
                 key={product.id}
                 to={`/products/${product.id}`}

@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import OnboardingRoute from "@/components/OnboardingRoute";
+import AdminRoute from "@/components/AdminRoute";
 import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
 import ComingSoon from "./pages/ComingSoon";
@@ -30,7 +32,7 @@ import DealInbox from "./pages/DealInbox";
 import DealRoom from "./pages/DealRoom";
 import EditProduct from "./pages/EditProduct";
 import AdminDashboard from "./pages/AdminDashboard";
-import AdminRoute from "./components/AdminRoute";
+import Suspended from "./pages/Suspended";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +46,7 @@ const App = () => (
           <AuthProvider>
             <ScrollToTop />
             <Routes>
+              {/* Public routes */}
               <Route path="/" element={<ForCreators />} />
               <Route path="/for-brands" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
@@ -54,10 +57,15 @@ const App = () => (
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/coming-soon" element={<ComingSoon />} />
-              <Route path="/onboarding/role" element={<ProtectedRoute><OnboardingRole /></ProtectedRoute>} />
-              <Route path="/onboarding/brand" element={<ProtectedRoute><OnboardingBrand /></ProtectedRoute>} />
-              <Route path="/onboarding/creator" element={<ProtectedRoute><OnboardingCreator /></ProtectedRoute>} />
+              <Route path="/suspended" element={<Suspended />} />
+
+              {/* Onboarding routes — separate guard that allows non-onboarded users */}
+              <Route path="/onboarding/role" element={<OnboardingRoute><OnboardingRole /></OnboardingRoute>} />
+              <Route path="/onboarding/brand" element={<OnboardingRoute><OnboardingBrand /></OnboardingRoute>} />
+              <Route path="/onboarding/creator" element={<OnboardingRoute><OnboardingCreator /></OnboardingRoute>} />
               <Route path="/onboarding" element={<Navigate to="/onboarding/role" replace />} />
+
+              {/* Protected routes — require auth + completed onboarding */}
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/browse" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
               <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
@@ -74,7 +82,10 @@ const App = () => (
               <Route path="/settings" element={<Navigate to="/settings/profile" replace />} />
               <Route path="/settings/profile" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/settings/payment" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+
+              {/* Admin */}
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>

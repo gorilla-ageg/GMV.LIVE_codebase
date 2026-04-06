@@ -288,6 +288,7 @@ const DealRoom = () => {
                 dealStatus={deal.status}
                 dealRate={Number(deal.rate) || 0}
                 creatorUserId={convo.creator_user_id}
+                onTabChange={setActiveTab}
               />
             </TabsContent>
             <TabsContent value="shipment" className="flex-1 overflow-y-auto m-0">

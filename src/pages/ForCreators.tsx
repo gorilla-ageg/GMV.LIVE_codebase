@@ -1,21 +1,23 @@
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import StaticVideoCarousel from "@/components/StaticVideoCarousel";
-import HeroVideoStrip from "@/components/HeroVideoStrip";
+import { Badge } from "@/components/ui/badge";
+import LiveVideoCard from "@/components/LiveVideoCard";
 import {
-  Sparkles,
   ArrowRight,
   ChevronRight,
   CheckCircle2,
   DollarSign,
   Shield,
-  FileText,
   Globe,
   TrendingUp,
   Users,
   ShoppingBag,
   Zap,
+  Video,
+  Star,
+  Mic,
+  Play,
 } from "lucide-react";
 import {
   Accordion,
@@ -24,89 +26,12 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-/* ─── Perks ─── */
-const perks = [
-  { icon: Sparkles, title: "No Experience Needed" },
-  { icon: DollarSign, title: "Earn Commission & High Salary" },
-  { icon: Globe, title: "Work Remotely & Async" },
-  { icon: Shield, title: "Guaranteed Payments" },
-  { icon: FileText, title: "Contract Processing" },
-];
-
-/* ─── Platform data ─── */
-const platforms = [
-  { name: "TikTok Shop", img: "/images/platforms/tiktok-shop.png" },
-  { name: "Amazon Live", img: "/images/platforms/amazon-live.png" },
-  { name: "eBay Live", img: "/images/platforms/ebay-live.png" },
-];
-
-/* ─── Market stats ─── */
-const marketStats = [
-  { value: "20%", label: "of all e-commerce will be live shopping by 2026", icon: ShoppingBag },
-  { value: "10x", label: "higher conversion rate vs traditional e-commerce", icon: TrendingUp },
-  { value: "500+", label: "new creator millionaires every month", icon: Users },
-  { value: "$600B+", label: "global live shopping market by 2027", icon: Zap },
-];
-
-/* ─── Brand logos ─── */
-const brandLogos = [
-  { name: "Adidas", img: "/images/brands/adidas.png" },
-  { name: "Crocs", img: "/images/brands/crocs.png" },
-  { name: "Sephora", img: "/images/brands/sephora.png" },
-  { name: "Walmart", img: "/images/brands/walmart.png" },
-  { name: "Samsung", img: "/images/brands/samsung.png" },
-];
-
-/* ─── How it works steps ─── */
-const steps = [
-  {
-    step: 1,
-    title: "Create an Optimized Profile",
-    description:
-      "Showcase your best live streams with a professional portfolio that highlights your selling style, niches, and past brand collaborations.",
-  },
-  {
-    step: 2,
-    title: "Get Booked by Top Brands",
-    description:
-      "Chat directly with brands, negotiate your rates, and lock in live stream deals, all inside GMV.live.",
-  },
-  {
-    step: 3,
-    title: "Go Live & Earn",
-    description:
-      "We handle payments, contracts, and invoicing so you can focus on what you do best: selling live.",
-  },
-  {
-    step: 4,
-    title: "Get Paid Instantly",
-    description:
-      "Once the stream wraps and the brand approves, your earnings hit your account. No chasing invoices.",
-  },
-];
-
-/* ─── FAQ ─── */
 const faqs = [
-  {
-    q: "What is a Live Shopping Host?",
-    a: "A live shopping host is a creator who sells products in real-time on platforms like TikTok Shop, Amazon Live, or brand websites. Hosts engage audiences, demo products, and drive sales during live streams.",
-  },
-  {
-    q: "How do I get booked on GMV.live?",
-    a: "Once your profile is live, brands can discover you through our marketplace, view your portfolio, and reach out directly with product offers and stream opportunities.",
-  },
-  {
-    q: "Does GMV.live take a cut of my earnings?",
-    a: "GMV.live does not take a percentage of your sales commissions. We charge brands a platform fee. Your rates stay yours.",
-  },
-  {
-    q: "What platforms does GMV.live support?",
-    a: "We support TikTok Shop, Amazon Live, Instagram Live, YouTube Live, and custom brand storefronts. More platforms are added regularly.",
-  },
-  {
-    q: "How do payments work?",
-    a: "Payments are secured upfront by the brand. Once the stream is completed and approved, funds are released directly to your bank account.",
-  },
+  { q: "What is a Live Shopping Host?", a: "A live shopping host sells products in real-time on platforms like TikTok Shop, Amazon Live, or Instagram Live. You demo products, engage your audience, and earn commission on every sale plus a flat rate per stream." },
+  { q: "Do I need experience?", a: "No! Many of our top hosts started with zero experience. If you're comfortable on camera and can engage an audience, you have what it takes. We'll help you get set up." },
+  { q: "How much can I earn?", a: "Hosts earn $200-$1,000+ per stream as a flat fee, plus 10-25% commission on all sales. Top performers earn $5,000+ per week across multiple streams." },
+  { q: "Does GMV.live take a cut?", a: "No. We charge brands a platform fee. Your commission and flat rate stay 100% yours." },
+  { q: "How do payments work?", a: "After your stream, the brand approves deliverables and payment is sent directly to your Venmo, PayPal, or Zelle. No invoicing needed." },
 ];
 
 const ForCreators = () => {
@@ -114,363 +39,369 @@ const ForCreators = () => {
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
 
-      {/* ═══════ SECTION 1: HERO + PERKS (gradient bg) ═══════ */}
-      <div className="relative overflow-hidden">
-        {/* Gradient blobs */}
-        <div className="cloud-blob bg-primary w-[500px] h-[500px] -top-32 -left-32 absolute" />
-        <div className="cloud-blob bg-accent w-[500px] h-[500px] top-20 -right-40 absolute" />
+      {/* ═══════════════════════════════════════════
+          SECTION 1: HERO — Big statement + live video
+      ═══════════════════════════════════════════ */}
+      <section className="relative overflow-hidden pt-28 pb-0 sm:pt-36 lg:pt-44">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-transparent to-accent/5" />
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-primary/6 rounded-full blur-[120px]" />
 
-        <section className="relative pt-24 pb-14 sm:pt-32 sm:pb-16 lg:pt-40 lg:pb-24">
-          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16 items-center">
-              {/* Left: Copy */}
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm font-semibold uppercase tracking-widest text-primary">
-                  Become a Live Shopping Host
-                </p>
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mx-auto text-center">
+            <Badge variant="outline" className="mb-6 text-xs font-semibold uppercase tracking-widest border-primary/30 text-primary px-4 py-1.5">
+              <Video className="h-3 w-3 mr-1.5" /> For Creators
+            </Badge>
 
-                <h1 className="mt-4 sm:mt-5 text-3xl font-black leading-[1.1] tracking-tight sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl">
-                  Where{" "}
-                  <span className="relative inline-block">
-                    <span className="relative z-10">Top Brands</span>
-                    <span className="absolute bottom-1 left-0 right-0 h-2.5 sm:h-3 bg-primary opacity-40 rounded-sm -z-0" />
-                  </span>{" "}
-                  Find Their Live Shopping Hosts.
-                </h1>
+            <h1 className="text-4xl font-black leading-[1.08] tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+              Go live.{" "}
+              <span className="text-primary">Get paid.</span>
+            </h1>
 
-                <p className="mt-4 sm:mt-6 text-base sm:text-lg text-muted-foreground leading-relaxed">
-                  Get paid to share your passion online. Join the fastest-growing channel in e-commerce.
-                </p>
+            <p className="mt-6 text-lg text-muted-foreground leading-relaxed sm:text-xl max-w-xl mx-auto">
+              Brands are looking for live-shopping hosts right now.
+              Stream products you love, build your audience, earn real money.
+            </p>
 
-                <div className="mt-6 sm:mt-8 flex flex-wrap gap-3 sm:gap-4">
-                  <Button
-                    size="lg"
-                    className="rounded-full px-6 sm:px-8 text-sm sm:text-base font-bold shadow-lg shadow-primary/20"
-                    asChild
-                  >
-                    <Link to="/auth">
-                      Join Now — It's Free <ArrowRight className="ml-1.5 sm:ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
-
-                {/* Perks inline — visible all breakpoints */}
-                <div className="mt-8 sm:mt-10 flex flex-wrap gap-2 sm:gap-3">
-                  {perks.slice(0, 4).map((p) => (
-                    <span
-                      key={p.title}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-card/80 px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs font-medium text-foreground/90 backdrop-blur-sm"
-                    >
-                      <p.icon className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary shrink-0" />
-                      <span className="truncate">{p.title}</span>
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Right: Live shopping videos */}
-              <div className="min-w-0 flex flex-col items-center lg:items-end">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 sm:mb-3">
-                  Live shopping in action
-                </p>
-                <div className="flex justify-center lg:justify-end overflow-x-auto pb-2 lg:pb-0 w-full max-w-[360px] sm:max-w-[420px] lg:max-w-none">
-                  <HeroVideoStrip variant="featured" size="lg" align="end" />
-                </div>
-              </div>
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Button size="lg" className="rounded-full px-8 text-base font-bold shadow-lg shadow-primary/20 h-12" asChild>
+                <Link to="/auth">Start Hosting <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button>
+              <Button size="lg" variant="outline" className="rounded-full px-8 text-base h-12" asChild>
+                <Link to="/for-brands">I'm a Brand <ChevronRight className="ml-1 h-4 w-4" /></Link>
+              </Button>
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* Perks row — full list as cards (complement to hero pills) */}
-        <section className="relative pb-12 sm:pb-16 lg:pb-20">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 lg:gap-4">
-              {perks.map((p) => (
-                <div
-                  key={p.title}
-                  className="flex items-center gap-2 sm:gap-2.5 rounded-xl border border-border bg-card px-3 py-2.5 sm:px-4 sm:py-3 backdrop-blur-sm min-w-0"
-                >
-                  <p.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-accent" />
-                  <span className="text-xs sm:text-sm font-medium text-foreground/80 truncate">{p.title}</span>
+        {/* Live stream video strip — shows real streams */}
+        <div className="relative mt-32 sm:mt-40 lg:mt-48 pb-24 sm:pb-32">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <p className="text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-6">
+              This is live shopping
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {[
+                { video: "/videos/creator-1.mp4", poster: "/images/thumbs/creator-1.png", label: "Beauty haul stream", sublabel: "$4.8K GMV earned" },
+                { video: "/videos/creator-2.mp4", poster: "/images/thumbs/creator-2.png", label: "Tech review stream", sublabel: "$3.2K GMV earned" },
+                { video: "/videos/creator-3.mp4", poster: "/images/thumbs/creator-3.png", label: "Fashion try-on", sublabel: "$5.1K GMV earned" },
+                { video: "/videos/creator-4.mp4", poster: "/images/thumbs/creator-4.png", label: "Skincare demo", sublabel: "$2.9K GMV earned" },
+                { video: "/videos/creator-5.mp4", poster: "/images/thumbs/creator-5.png", label: "Product unboxing", sublabel: "$6.3K GMV earned" },
+              ].map((stream, i) => (
+                <div key={i} className={`${i >= 2 && i < 3 ? "hidden sm:block" : ""} ${i >= 3 ? "hidden lg:block" : ""}`}>
+                  <LiveVideoCard {...stream} />
                 </div>
               ))}
-            </div>
-          </div>
-        </section>
-      </div>
-
-      {/* ═══════ SECTION 2: VIDEO PROOF (solid bg) ═══════ */}
-      <section className="py-12 sm:py-16 lg:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <StaticVideoCarousel />
-          <div className="mt-6 sm:mt-8 max-w-2xl mx-auto text-center">
-            <p className="text-base sm:text-lg text-muted-foreground">
-              Live shopping is the fastest-growing channel in e-commerce. Will you ride it?
-            </p>
-            <div className="mt-4 sm:mt-6 flex justify-center">
-              <Button
-                size="lg"
-                className="rounded-full px-6 sm:px-8 text-sm sm:text-base font-bold"
-                asChild
-              >
-                <Link to="/auth">
-                  Don't Miss Out <ArrowRight className="ml-1.5 sm:ml-2 h-4 w-4" />
-                </Link>
-              </Button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ═══════ SECTION 3: MARKET PROOF (gradient bg) ═══════ */}
-      <div className="relative overflow-hidden">
-        <div className="cloud-blob bg-primary w-[600px] h-[600px] -top-40 -right-40 absolute" />
-        <div className="cloud-blob bg-accent w-[400px] h-[400px] bottom-0 -left-20 absolute" />
-
-        <section className="relative py-12 sm:py-16 lg:py-20 xl:py-24">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-10 sm:mb-12">
-              <p className="text-5xl font-black tracking-tight text-primary sm:text-6xl lg:text-7xl xl:text-8xl">
-                $600B+
-              </p>
-              <p className="mt-2 sm:mt-3 text-base sm:text-lg text-muted-foreground">
-                Global live shopping market by 2027
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-              {marketStats.filter(s => s.value !== "$600B+").map((stat) => (
-                <div
-                  key={stat.value}
-                  className="rounded-2xl border border-border bg-card/60 backdrop-blur-sm p-4 sm:p-6 text-center min-w-0"
-                >
-                  <stat.icon className="mx-auto h-5 w-5 sm:h-6 sm:w-6 text-accent mb-2 sm:mb-3" />
-                  <p className="text-2xl font-black tracking-tight text-primary sm:text-3xl lg:text-4xl">
-                    {stat.value}
-                  </p>
-                  <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-muted-foreground leading-snug">
-                    {stat.label}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <p className="mx-auto mt-12 sm:mt-16 mb-6 sm:mb-8 max-w-lg text-center text-base sm:text-lg font-semibold text-foreground">
-              All platforms are taking action. Now it's your turn!
-            </p>
-
-            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 lg:gap-10">
-              {platforms.map((p) => (
-                <div key={p.name} className="rounded-xl overflow-hidden border border-border bg-card/40 shrink-0">
-                  <img
-                    src={p.img}
-                    alt={p.name}
-                    className="h-20 w-auto object-contain sm:h-24 lg:h-28"
-                  />
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-6 sm:mt-8 flex justify-center">
-              <Button
-                size="lg"
-                className="rounded-full px-6 sm:px-8 text-sm sm:text-base font-bold"
-                asChild
-              >
-                <Link to="/auth">
-                  Join the Revolution <ArrowRight className="ml-1.5 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
+      {/* ═══════════════════════════════════════════
+          SECTION 2: TRUST BAR
+      ═══════════════════════════════════════════ */}
+      <section className="mt-20 sm:mt-28 border-y border-border/30 bg-card/20 py-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 text-sm text-muted-foreground">
+            <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> No experience needed</span>
+            <span className="flex items-center gap-2"><DollarSign className="h-4 w-4 text-emerald-400" /> Commission + flat fee</span>
+            <span className="flex items-center gap-2"><Globe className="h-4 w-4 text-emerald-400" /> Work from anywhere</span>
+            <span className="flex items-center gap-2"><Shield className="h-4 w-4 text-emerald-400" /> Secure payments</span>
           </div>
-        </section>
-      </div>
-
-      {/* ═══════ SECTION 4: BRAND TRUST (solid bg) ═══════ */}
-      <section className="py-12 sm:py-16 lg:py-20 xl:py-24 overflow-hidden">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-8 sm:mb-12">
-          <h2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
-            Brands Already Using Live Shopping
-          </h2>
         </div>
-        <div className="relative w-full">
-          <div className="flex animate-scroll-logos w-max">
-            {[...brandLogos, ...brandLogos].map((b, i) => (
-              <img
-                key={`${b.name}-${i}`}
-                src={b.img}
-                alt={b.name}
-                className="h-8 w-auto object-contain brightness-0 invert opacity-50 hover:opacity-100 transition-opacity sm:h-10 mx-6 sm:mx-8 lg:mx-12"
-              />
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          SECTION 3: THE OPPORTUNITY — Market stats
+      ═══════════════════════════════════════════ */}
+      <section className="py-24 sm:py-32 lg:py-40">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16 sm:mb-20">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-4">The opportunity</p>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+              Live shopping is <span className="text-primary">exploding</span>
+            </h2>
+            <p className="mt-5 text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">
+              The biggest shift in e-commerce since social media. Early movers are earning life-changing money.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {[
+              { value: "$600B+", label: "Global live shopping market by 2027", icon: ShoppingBag },
+              { value: "10x", label: "Higher conversion than traditional e-com", icon: TrendingUp },
+              { value: "500+", label: "New creator millionaires every month", icon: Users },
+              { value: "20%", label: "Of all e-commerce will be live by 2027", icon: Zap },
+            ].map((stat) => (
+              <div key={stat.value} className="rounded-2xl border border-border bg-card p-6 sm:p-8 text-center hover:border-primary/20 transition-colors">
+                <stat.icon className="mx-auto h-6 w-6 text-primary/60 mb-4" />
+                <p className="text-3xl font-black text-primary sm:text-4xl lg:text-5xl">{stat.value}</p>
+                <p className="mt-3 text-sm text-muted-foreground leading-snug">{stat.label}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ═══════ HOW IT WORKS (gradient bg) ═══════ */}
-      <div className="relative overflow-hidden">
-        <div className="cloud-blob bg-primary w-[500px] h-[500px] top-20 -left-40 absolute" />
-        <div className="cloud-blob bg-accent w-[400px] h-[400px] bottom-20 -right-32 absolute" />
+      {/* ═══════════════════════════════════════════
+          SECTION 4: HOW IT WORKS — Step by step
+      ═══════════════════════════════════════════ */}
+      <section className="py-24 sm:py-32 lg:py-40 relative overflow-hidden bg-card/30">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/3 via-transparent to-transparent" />
 
-        <section className="relative py-12 sm:py-16 lg:py-20 xl:py-24">
-          <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-            <h2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
-              How It Works
+        <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16 sm:mb-20">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-4">How it works</p>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+              Four steps to your first stream
             </h2>
-            <p className="mx-auto mt-3 sm:mt-4 max-w-xl text-center text-sm sm:text-base text-muted-foreground">
-              From sign-up to payout. Here's how <em>GMV.live</em> works for creators.
+            <p className="mt-5 text-lg text-muted-foreground max-w-md mx-auto">
+              Sign up, get matched, go live, get paid. It really is that simple.
             </p>
+          </div>
 
-            <div className="mt-10 sm:mt-14 space-y-8 sm:space-y-12">
-              {steps.map((s) => (
-                <div
-                  key={s.step}
-                  className="rounded-2xl border border-border bg-card p-4 sm:p-6 lg:p-8 min-w-0"
-                >
-                  <p className="text-sm font-mono font-semibold text-primary">{s.step}_</p>
-                  <h3 className="mt-2 text-lg font-bold sm:text-xl lg:text-2xl">{s.title}</h3>
-                  <p className="mt-2 sm:mt-3 text-sm sm:text-base leading-relaxed text-muted-foreground">{s.description}</p>
-
-                  {s.step === 1 && (
-                    <div className="mt-4 sm:mt-6 overflow-hidden rounded-xl">
-                      <img
-                        src="/images/creator-profile.png"
-                        alt="Creator profile example"
-                        className="w-full object-cover rounded-lg"
-                        loading="lazy"
-                      />
+          <div className="space-y-8">
+            {[
+              {
+                step: "01", icon: Mic, title: "Build your profile",
+                desc: "Showcase your niche, past streams, and selling style. Brands browse creators like you every day.",
+                color: "text-primary bg-primary/10",
+                preview: (
+                  <div className="mt-5 rounded-xl border border-border bg-secondary/30 p-4 flex items-center gap-4">
+                    <div className="h-14 w-14 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                      <Users className="h-6 w-6 text-primary" />
                     </div>
-                  )}
-
-                  {s.step === 2 && (
-                    <div className="mt-4 sm:mt-6 rounded-xl border border-border bg-secondary p-3 sm:p-4 space-y-3">
-                      <div className="flex items-start gap-3">
-                        <div className="h-8 w-8 shrink-0 rounded-full bg-primary/20" />
-                        <div className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground min-w-0">
-                          Hi! We'd love you to host a live stream for our new skincare line. Interested?
-                        </div>
-                      </div>
-                      <div className="flex items-start justify-end gap-3">
-                        <div className="rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground">
-                          Sounds great! Here's my rate 🎬
-                        </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold">Your Creator Profile</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Beauty + Tech | 12K followers | 4.9 rating</p>
+                      <div className="flex gap-1.5 mt-2">
+                        <Badge variant="secondary" className="text-[10px]">TikTok</Badge>
+                        <Badge variant="secondary" className="text-[10px]">Instagram</Badge>
                       </div>
                     </div>
-                  )}
-
-                  {s.step === 3 && (
-                    <div className="mt-4 sm:mt-6 space-y-3">
-                      <div className="rounded-xl bg-accent/10 border border-accent/20 p-3 sm:p-4">
-                        <div className="flex items-center justify-between gap-2 min-w-0">
-                          <span className="font-semibold text-sm sm:text-base">Your Payment</span>
-                          <span className="font-bold shrink-0">$550</span>
-                        </div>
-                        <div className="mt-2 flex items-center gap-2 text-sm text-accent">
-                          <CheckCircle2 className="h-4 w-4 shrink-0" /> Secured
-                          <span className="ml-auto text-muted-foreground text-xs shrink-0">1h ago</span>
-                        </div>
-                      </div>
-                      <div className="rounded-xl bg-accent/10 border border-accent/20 p-3 sm:p-4">
-                        <span className="font-semibold text-sm sm:text-base">Your Contract</span>
-                        <div className="mt-2 space-y-1 text-sm text-accent">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 shrink-0" /> Signed by you
-                            <span className="ml-auto text-muted-foreground text-xs shrink-0">1h ago</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 shrink-0" /> Signed by brand
-                            <span className="ml-auto text-muted-foreground text-xs shrink-0">2h ago</span>
-                          </div>
-                        </div>
+                  </div>
+                ),
+              },
+              {
+                step: "02", icon: Users, title: "Get matched with brands",
+                desc: "Brands reach out with product offers. Chat, negotiate rates, and agree on terms — all inside GMV.live.",
+                color: "text-blue-400 bg-blue-500/10",
+                preview: (
+                  <div className="mt-5 rounded-xl border border-border bg-secondary/30 p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="h-7 w-7 shrink-0 rounded-full bg-blue-500/20 flex items-center justify-center text-[10px] font-bold text-blue-400">S</div>
+                      <div className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
+                        Hey! We'd love you to host a live stream for our new product line. $500 + 15% commission?
                       </div>
                     </div>
-                  )}
-
-                  {s.step === 4 && (
-                    <div className="mt-4 sm:mt-6 flex flex-col items-center rounded-xl border border-border bg-secondary p-6 sm:p-8 text-center">
-                      <p className="text-base sm:text-lg font-bold">Congratulations! 🎉</p>
-                      <p className="mt-3 sm:mt-4 text-3xl sm:text-4xl font-black text-primary">+ $550</p>
-                      <p className="mt-2 text-sm text-muted-foreground">The brand approved your live stream</p>
+                    <div className="flex items-start justify-end gap-3">
+                      <div className="rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground">
+                        Sounds great! Let's do it
+                      </div>
                     </div>
-                  )}
+                  </div>
+                ),
+              },
+              {
+                step: "03", icon: Play, title: "Go live & sell",
+                desc: "Stream on TikTok, Instagram, or YouTube. Demo products, engage your audience, and drive sales in real-time.",
+                color: "text-emerald-400 bg-emerald-500/10",
+                preview: (
+                  <div className="mt-5 grid grid-cols-3 gap-2">
+                    {[
+                      { video: "/videos/creator-6.mp4", poster: "/images/thumbs/creator-6.png", label: "Live now" },
+                      { video: "/videos/creator-7.mp4", poster: "/images/thumbs/creator-7.png", label: "Live now" },
+                      { video: "/videos/creator-8.mp4", poster: "/images/thumbs/video-05.png", label: "Live now" },
+                    ].map((v, i) => (
+                      <LiveVideoCard key={i} {...v} />
+                    ))}
+                  </div>
+                ),
+              },
+              {
+                step: "04", icon: DollarSign, title: "Get paid instantly",
+                desc: "Brand approves your stream, payment hits your account. No invoicing, no chasing. We handle everything.",
+                color: "text-amber-400 bg-amber-500/10",
+                preview: (
+                  <div className="mt-5 flex flex-col items-center rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-6 text-center">
+                    <p className="text-sm text-muted-foreground">Stream approved</p>
+                    <p className="mt-2 text-4xl font-black text-emerald-400">+ $1,240</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Sent to Venmo @you</p>
+                  </div>
+                ),
+              },
+            ].map((s) => (
+              <div key={s.step} className="rounded-2xl border border-border bg-card p-6 sm:p-8 hover:border-primary/20 transition-colors">
+                <div className="flex gap-5">
+                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${s.color}`}>
+                    <s.icon className="h-6 w-6" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-mono font-bold text-muted-foreground mb-1">STEP {s.step}</p>
+                    <h3 className="text-lg font-bold sm:text-xl">{s.title}</h3>
+                    <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed sm:text-base">{s.desc}</p>
+                  </div>
                 </div>
-              ))}
+                {s.preview}
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-14 text-center">
+            <Button size="lg" className="rounded-full px-8 text-base font-bold h-12" asChild>
+              <Link to="/auth">Create Your Profile <ArrowRight className="ml-2 h-4 w-4" /></Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          SECTION 5: EARNINGS — What you can make
+      ═══════════════════════════════════════════ */}
+      <section className="py-24 sm:py-32 lg:py-40">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-12 lg:grid-cols-2 items-center">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-4">Real earnings</p>
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                Creators earn <span className="text-primary">$500 – $5,000</span> per stream
+              </h2>
+              <p className="mt-5 text-muted-foreground leading-relaxed text-lg">
+                Commission on every sale plus a guaranteed flat rate. The more you sell, the more you earn. No ceiling.
+              </p>
+              <div className="mt-8 space-y-4">
+                {[
+                  "15-25% commission on all live sales",
+                  "$200-$1,000 flat fee per stream",
+                  "Bonuses for top-performing streams",
+                  "Weekly payouts via Venmo, PayPal, or Zelle",
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-3 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                    <span className="text-foreground">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Mock earnings dashboard */}
+            <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 space-y-6">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">This week</span>
+                <Badge variant="outline" className="text-emerald-400 border-emerald-500/30 text-xs">+23% vs last week</Badge>
+              </div>
+              <p className="text-5xl font-black text-foreground">$2,847</p>
+              <div className="space-y-3">
+                {[
+                  { brand: "Sephora", product: "Rare Beauty Blush Launch", amount: "$1,240", status: "Paid" },
+                  { brand: "Crocs", product: "Spring Collection Stream", amount: "$890", status: "Paid" },
+                  { brand: "Samsung", product: "Galaxy Buds Demo", amount: "$717", status: "Pending" },
+                ].map((deal) => (
+                  <div key={deal.brand} className="flex items-center justify-between rounded-xl bg-secondary/50 px-4 py-3">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{deal.brand}</p>
+                      <p className="text-xs text-muted-foreground">{deal.product}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-foreground">{deal.amount}</p>
+                      <p className={`text-[10px] font-medium ${deal.status === "Paid" ? "text-emerald-400" : "text-amber-400"}`}>{deal.status}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-border/50">
+                <Star className="h-3 w-3 text-amber-400" />
+                <span>4.9 avg rating across 12 streams this month</span>
+              </div>
             </div>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
 
-      {/* ═══════ FAQ (solid bg) ═══════ */}
-      <section className="py-12 sm:py-16 lg:py-20 xl:py-24">
+      {/* ═══════════════════════════════════════════
+          SECTION 6: BRAND TRUST
+      ═══════════════════════════════════════════ */}
+      <section className="py-16 border-y border-border/30">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <p className="text-center text-sm text-muted-foreground mb-8">Brands already using live shopping</p>
+          <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-14">
+            {["adidas", "crocs", "sephora", "walmart", "samsung"].map((b) => (
+              <img key={b} src={`/images/brands/${b}.png`} alt={b} className="h-8 w-auto object-contain brightness-0 invert opacity-30 hover:opacity-60 transition-opacity sm:h-10" />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          SECTION 7: FAQ
+      ═══════════════════════════════════════════ */}
+      <section className="py-24 sm:py-32 lg:py-40">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
-            Still Have Questions?
-          </h2>
-          <Accordion type="single" collapsible className="mt-8 sm:mt-10">
+          <div className="text-center mb-14">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-4">FAQ</p>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Common questions</h2>
+          </div>
+          <Accordion type="single" collapsible>
             {faqs.map((faq, i) => (
               <AccordionItem key={i} value={`faq-${i}`} className="border-border">
-                <AccordionTrigger className="text-left text-sm sm:text-base font-medium py-4 sm:py-5">{faq.q}</AccordionTrigger>
-                <AccordionContent className="text-muted-foreground text-sm sm:text-base pb-4 sm:pb-5">{faq.a}</AccordionContent>
+                <AccordionTrigger className="text-left text-base font-medium py-5">{faq.q}</AccordionTrigger>
+                <AccordionContent className="text-muted-foreground text-base pb-6 leading-relaxed">{faq.a}</AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
         </div>
       </section>
 
-      {/* ═══════ FINAL CTA (gradient bg) ═══════ */}
-      <div className="relative overflow-hidden">
-        <div className="cloud-blob bg-primary w-[500px] h-[500px] top-0 left-1/3 absolute" />
+      {/* ═══════════════════════════════════════════
+          SECTION 8: FINAL CTA
+      ═══════════════════════════════════════════ */}
+      <section className="relative py-28 sm:py-36 lg:py-44 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-accent/5" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-primary/8 rounded-full blur-[140px]" />
 
-        <section className="relative py-12 sm:py-16 lg:py-20 xl:py-28">
-          <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
-              Join Hundreds of Live Hosts
-            </h2>
-            <p className="mx-auto mt-3 sm:mt-4 max-w-xl text-sm sm:text-base text-muted-foreground">
-              Focus on selling live for the best brands. Hundreds of hosts have already joined <em>GMV.live</em>. Now it's your turn!
-            </p>
-            <div className="mt-8 sm:mt-10 flex flex-col items-center gap-3 sm:gap-4">
-              <Button
-                size="lg"
-                className="rounded-full px-6 sm:px-8 text-sm sm:text-base font-bold"
-                asChild
-              >
-                <Link to="/auth">
-                  Join <em>GMV.live</em> <ChevronRight className="ml-1.5 h-4 w-4" />
-                </Link>
-              </Button>
-              <Link
-                to="/for-brands"
-                className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Are you a brand? <ChevronRight className="ml-1 h-3 w-3" />
-              </Link>
-            </div>
+        <div className="relative mx-auto max-w-2xl px-4 text-center">
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+            Ready to go live?
+          </h2>
+          <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
+            Join hundreds of creators already earning on GMV.live. Your first brand deal could be days away.
+          </p>
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Button size="lg" className="rounded-full px-8 text-base font-bold shadow-lg shadow-primary/20 h-12" asChild>
+              <Link to="/auth">Join GMV.live — It's Free <ArrowRight className="ml-2 h-4 w-4" /></Link>
+            </Button>
           </div>
-        </section>
-      </div>
+          <Link to="/for-brands" className="inline-flex items-center mt-5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            Are you a brand? <ChevronRight className="ml-1 h-3 w-3" />
+          </Link>
+        </div>
+      </section>
 
-      {/* ═══════ FOOTER ═══════ */}
-      <footer className="border-t border-border py-10 sm:py-12">
+      {/* ═══════════════════════════════════════════
+          FOOTER
+      ═══════════════════════════════════════════ */}
+      <footer className="border-t border-border py-12 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-8 sm:grid-cols-3">
             <div>
-              <p className="text-base sm:text-lg font-bold text-foreground"><em>GMV.live</em></p>
-              <p className="mt-2 text-xs sm:text-sm text-muted-foreground">support@GMV.live</p>
+              <div className="flex items-center gap-2">
+                <img src="/images/gmv-logo-mark.svg" alt="GMV.live" className="h-7 w-7" />
+                <span className="text-lg font-bold">GMV<span className="font-normal text-muted-foreground">.live</span></span>
+              </div>
+              <p className="mt-3 text-sm text-muted-foreground">The live commerce marketplace.</p>
+              <p className="mt-1 text-sm text-muted-foreground">support@gmv.live</p>
             </div>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <Link to="/for-brands" className="block hover:text-foreground">For Brands</Link>
-              <Link to="/" className="block hover:text-foreground">For Creators</Link>
-              <Link to="/pricing" className="block hover:text-foreground">Pricing</Link>
+            <div className="space-y-2.5 text-sm text-muted-foreground">
+              <Link to="/for-brands" className="block hover:text-foreground transition-colors">For Brands</Link>
+              <Link to="/" className="block hover:text-foreground transition-colors">For Creators</Link>
+              <Link to="/pricing" className="block hover:text-foreground transition-colors">Pricing</Link>
+              <Link to="/blog" className="block hover:text-foreground transition-colors">Blog</Link>
             </div>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <Link to="/coming-soon" className="block hover:text-foreground">Privacy Policy</Link>
-              <Link to="/coming-soon" className="block hover:text-foreground">Terms of Use</Link>
+            <div className="space-y-2.5 text-sm text-muted-foreground">
+              <Link to="/coming-soon" className="block hover:text-foreground transition-colors">Privacy Policy</Link>
+              <Link to="/coming-soon" className="block hover:text-foreground transition-colors">Terms of Use</Link>
             </div>
           </div>
-          <p className="mt-8 text-xs text-muted-foreground">
-            © {new Date().getFullYear()} <em>GMV.live</em>. All rights reserved.
-          </p>
+          <p className="mt-10 text-xs text-muted-foreground">&copy; {new Date().getFullYear()} GMV.live. All rights reserved.</p>
         </div>
       </footer>
     </div>

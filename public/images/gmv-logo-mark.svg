@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="gmv-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="hsl(349, 98%, 56%)" />
+      <stop offset="100%" stop-color="hsl(349, 98%, 42%)" />
+    </linearGradient>
+  </defs>
+  <!-- Rounded square background -->
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#gmv-grad)" />
+  <!-- G letterform -->
+  <path d="M32 14C22.06 14 14 22.06 14 32s8.06 18 18 18c4.97 0 9.47-2.01 12.73-5.27l-2.83-2.83C39.34 44.46 35.87 46 32 46c-7.73 0-14-6.27-14-14s6.27-14 14-14c3.87 0 7.36 1.56 9.9 4.1L44.72 19.27C41.47 16.01 36.97 14 32 14z" fill="white" opacity="0.95"/>
+  <rect x="32" y="28" width="14" height="4" rx="2" fill="white" opacity="0.95"/>
+  <rect x="32" y="28" width="4" height="12" rx="2" fill="white" opacity="0.95"/>
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" fill="none">
+  <!-- GMV text -->
+  <text x="0" y="36" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-weight="800" font-size="38" letter-spacing="-1">
+    <tspan fill="hsl(349, 98%, 56%)">G</tspan><tspan fill="hsl(349, 98%, 56%)">M</tspan><tspan fill="hsl(349, 98%, 56%)">V</tspan><tspan fill="white" font-weight="400" font-size="28">.live</tspan>
+  </text>
+</svg>

@@ -182,6 +182,8 @@ export type Database = {
           location: string | null
           niches: string[] | null
           past_collabs: string[] | null
+          payment_handle: string | null
+          payment_method: string | null
           platforms: string[] | null
           portfolio_urls: string[] | null
           product_interests: string[] | null
@@ -206,6 +208,8 @@ export type Database = {
           location?: string | null
           niches?: string[] | null
           past_collabs?: string[] | null
+          payment_handle?: string | null
+          payment_method?: string | null
           platforms?: string[] | null
           portfolio_urls?: string[] | null
           product_interests?: string[] | null
@@ -230,6 +234,8 @@ export type Database = {
           location?: string | null
           niches?: string[] | null
           past_collabs?: string[] | null
+          payment_handle?: string | null
+          payment_method?: string | null
           platforms?: string[] | null
           portfolio_urls?: string[] | null
           product_interests?: string[] | null
@@ -354,6 +360,8 @@ export type Database = {
           hours: number | null
           id: string
           live_date: string | null
+          payment_method_used: string | null
+          payment_status: string | null
           rate: number | null
           status: Database["public"]["Enums"]["deal_status"]
           total_amount: number | null
@@ -369,6 +377,8 @@ export type Database = {
           hours?: number | null
           id?: string
           live_date?: string | null
+          payment_method_used?: string | null
+          payment_status?: string | null
           rate?: number | null
           status?: Database["public"]["Enums"]["deal_status"]
           total_amount?: number | null
@@ -384,6 +394,8 @@ export type Database = {
           hours?: number | null
           id?: string
           live_date?: string | null
+          payment_method_used?: string | null
+          payment_status?: string | null
           rate?: number | null
           status?: Database["public"]["Enums"]["deal_status"]
           total_amount?: number | null

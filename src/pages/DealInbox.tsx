@@ -32,6 +32,8 @@ interface ConversationJoin {
   creator_profile: ProfileData | null;
 }
 
+type NameLookup = Record<string, string>;
+
 interface DealRow {
   id: string;
   status: DealStatus;
@@ -75,9 +77,41 @@ const DealInbox = () => {
         .in("conversation_id", convoIds)
         .order("updated_at", { ascending: false });
       if (dealsError) throw dealsError;
-      return (data || []) as unknown as DealRow[];
+      const rows = (data || []) as unknown as DealRow[];
+      return rows;
     },
     enabled: !!user,
+  });
+
+  // Fetch fallback names from brand_profiles and creator_profiles for users with no display_name
+  const otherUserIds = (deals ?? [])
+    .map((d) => {
+      const convo = d.conversations;
+      if (!convo) return null;
+      const isBrand = convo.brand_user_id === user?.id;
+      const otherId = isBrand ? convo.creator_user_id : convo.brand_user_id;
+      const other = isBrand ? convo.creator_profile : convo.brand_profile;
+      return other?.display_name ? null : otherId;
+    })
+    .filter((id): id is string => id !== null);
+
+  const { data: nameLookup } = useQuery({
+    queryKey: ["deal-name-fallbacks", otherUserIds],
+    queryFn: async (): Promise<NameLookup> => {
+      if (otherUserIds.length === 0) return {};
+      const lookup: NameLookup = {};
+      const [{ data: brands }, { data: creators }] = await Promise.all([
+        supabase.from("brand_profiles").select("user_id, company_name").in("user_id", otherUserIds),
+        supabase.from("creator_profiles").select("user_id, first_name, last_name").in("user_id", otherUserIds),
+      ]);
+      brands?.forEach((b) => { if (b.company_name) lookup[b.user_id] = b.company_name; });
+      creators?.forEach((c) => {
+        const full = [c.first_name, c.last_name].filter(Boolean).join(" ");
+        if (full) lookup[c.user_id] = full;
+      });
+      return lookup;
+    },
+    enabled: otherUserIds.length > 0,
   });
 
   const filterDeals = (tab: string) => {
@@ -92,6 +126,8 @@ const DealInbox = () => {
     const convo = deal.conversations;
     const isBrand = convo?.brand_user_id === user?.id;
     const other = isBrand ? convo?.creator_profile : convo?.brand_profile;
+    const otherId = isBrand ? convo?.creator_user_id : convo?.brand_user_id;
+    const displayName = other?.display_name || (otherId ? nameLookup?.[otherId] : null) || (isBrand ? "Creator" : "Brand");
 
     return (
       <Link key={deal.id} to={`/deals/${deal.id}`}>
@@ -99,11 +135,11 @@ const DealInbox = () => {
           <CardContent className="p-4 flex items-center gap-4">
             <Avatar className="h-10 w-10">
               <AvatarImage src={other?.avatar_url ?? undefined} />
-              <AvatarFallback className="bg-secondary text-foreground">{other?.display_name?.charAt(0) || "?"}</AvatarFallback>
+              <AvatarFallback className="bg-secondary text-foreground">{displayName.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <p className="font-medium truncate">{other?.display_name || "Unknown"}</p>
+                <p className="font-medium truncate">{displayName}</p>
                 <StatusBadge status={deal.status} />
               </div>
               {deal.deliverables && (

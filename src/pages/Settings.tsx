@@ -211,7 +211,7 @@ const Settings = () => {
         .update({
           payment_method: paymentMethod,
           payment_handle: paymentHandle.trim(),
-        } as Record<string, unknown>)
+        })
         .eq("user_id", user.id);
       if (error) throw error;
       setEditingPayment(false);

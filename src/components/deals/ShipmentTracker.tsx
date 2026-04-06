@@ -77,7 +77,7 @@ const ShipmentTracker = ({ dealId, conversationId, isBrand }: ShipmentTrackerPro
         message_type: "system_event",
         metadata: { event_type: "product_shipped" },
       });
-      if (msgErr) throw msgErr;
+      // best-effort: don't block main operation if system message fails
     },
     onSuccess: () => {
       setTrackingNumber("");
@@ -115,7 +115,7 @@ const ShipmentTracker = ({ dealId, conversationId, isBrand }: ShipmentTrackerPro
           message_type: "system_event",
           metadata: { event_type: "product_delivered" },
         });
-        if (msgErr) throw msgErr;
+        // best-effort: don't block main operation if system message fails
       }
     },
     onSuccess: () => {
@@ -141,7 +141,7 @@ const ShipmentTracker = ({ dealId, conversationId, isBrand }: ShipmentTrackerPro
         message_type: "system_event",
         metadata: { event_type: "product_received" },
       });
-      if (msgErr) throw msgErr;
+      // best-effort: don't block main operation if system message fails
     },
     onSuccess: () => {
       setReceiptConfirmed(true);

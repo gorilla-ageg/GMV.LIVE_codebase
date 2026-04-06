@@ -27,16 +27,22 @@ import {
   CheckCircle2,
   Zap,
 } from "lucide-react";
-import { isDemoId, getDemoCreator } from "@/data/demoData";
+interface SocialCreator {
+  tiktok_handle?: string | null;
+  instagram_handle?: string | null;
+  youtube_handle?: string | null;
+  facebook_handle?: string | null;
+  twitter_handle?: string | null;
+}
 
-const getSocialUrl = (platform: string, creator: any): string | null => {
-  const map: Record<string, { handle: string | null; urlPrefix: string }> = {
+const getSocialUrl = (platform: string, creator: SocialCreator): string | null => {
+  const map: Record<string, { handle: string | null | undefined; urlPrefix: string }> = {
     TikTok: { handle: creator.tiktok_handle, urlPrefix: "https://tiktok.com/@" },
-    Instagram: { handle: (creator as any).instagram_handle, urlPrefix: "https://instagram.com/" },
-    YouTube: { handle: (creator as any).youtube_handle, urlPrefix: "https://youtube.com/@" },
-    Facebook: { handle: (creator as any).facebook_handle, urlPrefix: "https://facebook.com/" },
-    "X (Twitter)": { handle: (creator as any).twitter_handle, urlPrefix: "https://x.com/" },
-    Twitter: { handle: (creator as any).twitter_handle, urlPrefix: "https://x.com/" },
+    Instagram: { handle: creator.instagram_handle, urlPrefix: "https://instagram.com/" },
+    YouTube: { handle: creator.youtube_handle, urlPrefix: "https://youtube.com/@" },
+    Facebook: { handle: creator.facebook_handle, urlPrefix: "https://facebook.com/" },
+    "X (Twitter)": { handle: creator.twitter_handle, urlPrefix: "https://x.com/" },
+    Twitter: { handle: creator.twitter_handle, urlPrefix: "https://x.com/" },
   };
   const entry = map[platform];
   if (!entry?.handle) return null;
@@ -50,16 +56,9 @@ const CreatorDetail = () => {
   const { toast } = useToast();
   const [offerOpen, setOfferOpen] = useState(false);
 
-  const isDemo = isDemoId(id || "");
-
   const { data: creator, isLoading } = useQuery({
     queryKey: ["creator", id],
     queryFn: async () => {
-      if (isDemo) {
-        const demo = getDemoCreator(id!);
-        if (!demo) throw new Error("Not found");
-        return demo;
-      }
       const { data, error } = await supabase
         .from("creator_profiles")
         .select("*, public_profiles!creator_profiles_profile_fkey(display_name, avatar_url, bio)")
@@ -131,15 +130,30 @@ const CreatorDetail = () => {
     mutationFn: async (offer: { rate: number; deliverables: string; liveDate: string; usageRights: string[]; note: string }) => {
       if (!user || !creator) return;
       let convoId: string;
+      let dealId: string;
+
+      // Check for existing conversation
       const { data: existing } = await supabase
         .from("conversations")
-        .select("id")
+        .select("id, deals(id)")
         .eq("brand_user_id", user.id)
         .eq("creator_user_id", creator.user_id)
         .maybeSingle();
 
       if (existing) {
         convoId = existing.id;
+        const existingDeal = (existing.deals as { id: string }[])?.[0];
+        if (existingDeal) {
+          dealId = existingDeal.id;
+        } else {
+          const { data: deal, error: dealErr } = await supabase
+            .from("deals")
+            .insert({ conversation_id: convoId, status: "negotiating" as never })
+            .select()
+            .single();
+          if (dealErr) throw dealErr;
+          dealId = deal.id;
+        }
       } else {
         const { data: convo, error } = await supabase
           .from("conversations")
@@ -148,17 +162,18 @@ const CreatorDetail = () => {
           .single();
         if (error) throw error;
         convoId = convo.id;
+
+        const { data: deal, error: dealErr } = await supabase
+          .from("deals")
+          .insert({ conversation_id: convoId, status: "negotiating" as never })
+          .select()
+          .single();
+        if (dealErr) throw dealErr;
+        dealId = deal.id;
       }
 
-      const { data: deal, error: dealErr } = await supabase
-        .from("deals")
-        .insert({ conversation_id: convoId, status: "negotiating" as any })
-        .select()
-        .single();
-      if (dealErr) throw dealErr;
-
       await supabase.from("deal_offers").insert({
-        deal_id: deal.id,
+        deal_id: dealId,
         sender_id: user.id,
         rate: offer.rate,
         hourly_rate: 0,
@@ -169,7 +184,7 @@ const CreatorDetail = () => {
         usage_rights: offer.usageRights,
         note: offer.note || null,
         status: "pending",
-      } as any);
+      } as never);
 
       await supabase.from("messages").insert({
         conversation_id: convoId,
@@ -179,9 +194,9 @@ const CreatorDetail = () => {
         metadata: { offer_rate: offer.rate },
       });
 
-      navigate(`/deals/${deal.id}`);
+      navigate(`/deals/${dealId}`);
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
 
   if (isLoading) {
@@ -214,7 +229,7 @@ const CreatorDetail = () => {
     );
   }
 
-  const profile = (creator as any).public_profiles;
+  const profile = (creator as Record<string, unknown>).public_profiles as { display_name?: string; avatar_url?: string; bio?: string } | undefined;
   const displayName = profile?.display_name || "Creator";
   const initials = displayName.slice(0, 2).toUpperCase();
   const portfolioImages = creator.portfolio_urls?.filter(Boolean) || [];
@@ -275,18 +290,16 @@ const CreatorDetail = () => {
           </div>
 
           {/* CTA buttons */}
-          {!isDemo && (
-            <div className="flex gap-2 sm:pb-1 shrink-0">
-              <Button variant="outline" onClick={handleStartConversation} className="gap-2">
-                <MessageSquare className="h-4 w-4" /> Message
+          <div className="flex gap-2 sm:pb-1 shrink-0">
+            <Button variant="outline" onClick={handleStartConversation} className="gap-2">
+              <MessageSquare className="h-4 w-4" /> Message
+            </Button>
+            {role === "brand" && (
+              <Button onClick={() => setOfferOpen(true)} className="gap-2">
+                <Send className="h-4 w-4" /> Send Offer
               </Button>
-              {role === "brand" && (
-                <Button onClick={() => setOfferOpen(true)} className="gap-2">
-                  <Send className="h-4 w-4" /> Send Offer
-                </Button>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Stats Grid */}
@@ -349,7 +362,7 @@ const CreatorDetail = () => {
           {/* Right column: Details sidebar */}
           <div className="space-y-4">
             {/* Social Handles */}
-            {(creator.tiktok_handle || (creator as any).instagram_handle || (creator as any).youtube_handle) && (
+            {(creator.tiktok_handle || creator.instagram_handle || creator.youtube_handle) && (
               <Card className="border-border bg-card">
                 <CardContent className="p-5">
                   <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3">Socials</h2>
@@ -371,9 +384,9 @@ const CreatorDetail = () => {
                         <ExternalLink className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                       </a>
                     )}
-                    {(creator as any).instagram_handle && (
+                    {creator.instagram_handle && (
                       <a
-                        href={`https://instagram.com/${(creator as any).instagram_handle}`}
+                        href={`https://instagram.com/${creator.instagram_handle}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors group"
@@ -383,14 +396,14 @@ const CreatorDetail = () => {
                         </div>
                         <div>
                           <span className="font-medium text-foreground block text-xs">Instagram</span>
-                          <span className="text-xs">@{(creator as any).instagram_handle}</span>
+                          <span className="text-xs">@{creator.instagram_handle}</span>
                         </div>
                         <ExternalLink className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                       </a>
                     )}
-                    {(creator as any).youtube_handle && (
+                    {creator.youtube_handle && (
                       <a
-                        href={`https://youtube.com/@${(creator as any).youtube_handle}`}
+                        href={`https://youtube.com/@${creator.youtube_handle}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors group"
@@ -400,7 +413,7 @@ const CreatorDetail = () => {
                         </div>
                         <div>
                           <span className="font-medium text-foreground block text-xs">YouTube</span>
-                          <span className="text-xs">@{(creator as any).youtube_handle}</span>
+                          <span className="text-xs">@{creator.youtube_handle}</span>
                         </div>
                         <ExternalLink className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                       </a>
@@ -476,7 +489,7 @@ const CreatorDetail = () => {
             )}
 
             {/* Quick Offer CTA (sticky feel on desktop) */}
-            {role === "brand" && !isDemo && (
+            {role === "brand" && (
               <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5">
                 <CardContent className="p-5 text-center">
                   <p className="text-sm font-medium text-foreground mb-3">Ready to collaborate?</p>

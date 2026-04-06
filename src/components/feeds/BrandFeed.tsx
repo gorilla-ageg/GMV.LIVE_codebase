@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Link } from "react-router-dom";
 import { Search, MapPin, Star, Users, Sparkles } from "lucide-react";
-import { DEMO_CREATORS } from "@/data/demoData";
+
 
 const NICHE_OPTIONS = ["Beauty", "Fashion", "Tech", "Food", "Fitness", "Lifestyle", "Gaming", "Home"];
 const PLATFORM_OPTIONS = ["TikTok", "Instagram", "YouTube", "Facebook"];
@@ -41,21 +41,6 @@ const BrandFeed = () => {
 
       const { data, error } = await q;
       if (error) throw error;
-      // Only merge demo creators in development
-      if (import.meta.env.DEV) {
-        const demoMapped = DEMO_CREATORS
-          .filter((d) => {
-            if (!search) return true;
-            const s = search.toLowerCase();
-            return (
-              d.niches.some((n) => n.toLowerCase().includes(s)) ||
-              d.location.toLowerCase().includes(s) ||
-              d.public_profiles.display_name.toLowerCase().includes(s)
-            );
-          })
-          .map((d) => ({ ...d }));
-        return [...(data || []), ...demoMapped];
-      }
       return data || [];
     },
   });
@@ -64,7 +49,7 @@ const BrandFeed = () => {
     setter(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
   };
 
-  const filtered = creators?.filter((c: any) => {
+  const filtered = creators?.filter((c: typeof creators[number]) => {
     if (selectedNiches.length > 0 && !c.niches?.some((n: string) => selectedNiches.includes(n))) return false;
     if (selectedPlatforms.length > 0 && !c.platforms?.some((p: string) => selectedPlatforms.includes(p))) return false;
     const fc = c.follower_count ?? 0;
@@ -188,7 +173,7 @@ const BrandFeed = () => {
           <p className="py-12 text-center text-muted-foreground">No creators match your filters. Try adjusting your search or clearing filters.</p>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {filtered?.map((creator: any) => (
+            {filtered?.map((creator) => (
               <Link
                 key={creator.id}
                 to={`/creators/${creator.user_id}`}

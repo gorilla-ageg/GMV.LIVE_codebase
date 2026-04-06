@@ -62,12 +62,7 @@ const OnboardingCreator = () => {
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
 
-  // Redirect unauthenticated users to auth
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth", { replace: true });
-    }
-  }, [user, loading, navigate]);
+  // Auth guard handled by OnboardingRoute in App.tsx
 
   // Step 1
   const [firstName, setFirstName] = useState("");
@@ -263,14 +258,6 @@ const OnboardingCreator = () => {
       await supabase.from("profiles").update({ onboarding_step: `creator-${prev}` }).eq("id", user.id);
     }
   };
-
-  if (loading || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <OnboardingLayout

@@ -82,6 +82,15 @@ const ContractView = ({ dealId, conversationId }: ContractViewProps) => {
       if (!signName.trim()) throw new Error("Please enter your full name");
       if (!convo) throw new Error("Deal data not loaded");
 
+      // Check if already signed (prevent duplicate key error)
+      const { data: existing } = await supabase
+        .from("deal_signatures")
+        .select("id")
+        .eq("deal_id", dealId)
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (existing) throw new Error("You have already signed this contract");
+
       // Insert signature
       const { error: sigErr } = await supabase.from("deal_signatures").insert({
         deal_id: dealId,
@@ -181,7 +190,7 @@ const ContractView = ({ dealId, conversationId }: ContractViewProps) => {
   }
 
   const terms = contract.terms as ContractTerms;
-  const userSigned = signatures?.some((s) => s.user_id === user?.id);
+  const userSigned = signatures?.some((s) => s.user_id === user?.id) || signMutation.isSuccess;
   const brandSig = signatures?.find((s) => s.user_id === convo?.brand_user_id);
   const creatorSig = signatures?.find((s) => s.user_id === convo?.creator_user_id);
 

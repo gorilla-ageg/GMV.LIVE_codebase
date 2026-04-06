@@ -10,19 +10,7 @@ const OnboardingRole = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Redirect unauthenticated users to auth
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth", { replace: true });
-    }
-  }, [user, loading, navigate]);
-
-  // Redirect already-onboarded users to dashboard
-  useEffect(() => {
-    if (!loading && user && onboardingCompleted) {
-      navigate("/dashboard", { replace: true });
-    }
-  }, [user, loading, onboardingCompleted, navigate]);
+  // Auth and onboarding guards are handled by OnboardingRoute in App.tsx
 
   const selectRole = async (role: "brand" | "creator") => {
     if (!user) return;
@@ -51,16 +39,6 @@ const OnboardingRole = () => {
       });
     }
   };
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!user) return null;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">

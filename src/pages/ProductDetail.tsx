@@ -20,24 +20,15 @@ import {
   Tag,
   Monitor,
 } from "lucide-react";
-import { isDemoId, getDemoProduct } from "@/data/demoData";
-
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const isDemo = isDemoId(id || "");
-
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
     queryFn: async () => {
-      if (isDemo) {
-        const demo = getDemoProduct(id!);
-        if (!demo) throw new Error("Not found");
-        return demo;
-      }
       const { data, error } = await supabase
         .from("products")
         .select("*, public_profiles!products_brand_profile_fkey(display_name, avatar_url, bio)")
@@ -225,13 +216,11 @@ const ProductDetail = () => {
           </div>
 
           {/* CTA button */}
-          {!isDemo && (
-            <div className="flex gap-2 sm:pb-1 shrink-0">
-              <Button onClick={handleStartConversation} className="gap-2">
-                <MessageSquare className="h-4 w-4" /> Message Brand
-              </Button>
-            </div>
-          )}
+          <div className="flex gap-2 sm:pb-1 shrink-0">
+            <Button onClick={handleStartConversation} className="gap-2">
+              <MessageSquare className="h-4 w-4" /> Message Brand
+            </Button>
+          </div>
         </div>
 
         {/* Stats Grid */}
@@ -353,16 +342,14 @@ const ProductDetail = () => {
             )}
 
             {/* Quick CTA */}
-            {!isDemo && (
-              <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5">
-                <CardContent className="p-5 text-center">
-                  <p className="text-sm font-medium text-foreground mb-3">Want to promote this product?</p>
-                  <Button onClick={handleStartConversation} className="w-full gap-2">
-                    <MessageSquare className="h-4 w-4" /> Message Brand
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+            <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5">
+              <CardContent className="p-5 text-center">
+                <p className="text-sm font-medium text-foreground mb-3">Want to promote this product?</p>
+                <Button onClick={handleStartConversation} className="w-full gap-2">
+                  <MessageSquare className="h-4 w-4" /> Message Brand
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

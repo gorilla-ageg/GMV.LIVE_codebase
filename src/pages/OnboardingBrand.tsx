@@ -46,12 +46,7 @@ const OnboardingBrand = () => {
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
 
-  // Redirect unauthenticated users to auth
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth", { replace: true });
-    }
-  }, [user, loading, navigate]);
+  // Auth guard handled by OnboardingRoute in App.tsx
 
   // Step 1 — Brand Basics
   const [brandName, setBrandName] = useState("");

@@ -1,7 +1,17 @@
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { Check, X, ChevronRight, ShieldCheck, DollarSign, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Check, X, ArrowRight, ShieldCheck, DollarSign, Users,
+  Zap, FileText, BarChart3, Mail, MessageSquare, Phone,
+} from "lucide-react";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const comparisonRows = [
   { feature: "Free to start, no upfront cost", us: true, them: false },
@@ -16,100 +26,260 @@ const comparisonRows = [
 ];
 
 const Pricing = () => {
+  const { toast } = useToast();
+  const [contactForm, setContactForm] = useState({ name: "", email: "", message: "" });
+  const [sending, setSending] = useState(false);
+
+  const handleContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contactForm.name.trim() || !contactForm.email.trim() || !contactForm.message.trim()) {
+      toast({ title: "All fields are required", variant: "destructive" });
+      return;
+    }
+    setSending(true);
+    try {
+      const { error } = await supabase.from("contact_messages" as never).insert({
+        name: contactForm.name.trim(),
+        email: contactForm.email.trim(),
+        message: contactForm.message.trim(),
+      } as never);
+      if (error) throw error;
+      setContactForm({ name: "", email: "", message: "" });
+      toast({ title: "Message sent!", description: "We'll get back to you within 24 hours." });
+    } catch {
+      toast({ title: "Failed to send", description: "Please email us directly at support@gmv.live", variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
 
-      {/* ═══════ HERO ═══════ */}
-      <section className="relative overflow-hidden pt-24 pb-14 sm:pt-32 sm:pb-16 lg:pt-40 lg:pb-24">
-        <div className="cloud-blob bg-primary w-[500px] h-[500px] -top-40 -left-40 absolute" />
-        <div className="cloud-blob bg-accent w-[400px] h-[400px] top-20 -right-40 absolute" />
-
-        <div className="relative mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl md:text-4xl lg:text-5xl">
-            Free to Use. We Only Win When You Win.
-          </h1>
-          <p className="mx-auto mt-4 sm:mt-6 max-w-2xl text-base sm:text-lg leading-relaxed text-muted-foreground">
-            There's zero cost to get started. We make money by taking a small commission on successful matchmaking and campaign management. That's it. Your success is literally our business model.
-          </p>
+      {/* ═══════════════════════════════════════════
+          HERO — Left copy + Right pricing cards
+      ═══════════════════════════════════════════ */}
+      <section className="relative overflow-hidden pt-28 sm:pt-36 lg:pt-44 pb-24 sm:pb-32 lg:pb-40">
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,hsl(349,98%,56%,0.06),transparent_50%)]" />
         </div>
-      </section>
 
-      {/* ═══════ VALUE PROPS ═══════ */}
-      <section className="py-12 sm:py-16 lg:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-3">
-            <div className="rounded-2xl border border-border/50 bg-card p-4 sm:p-6 shadow-sm text-center min-w-0">
-              <div className="mx-auto mb-3 sm:mb-4 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+            {/* Left — copy */}
+            <div className="lg:sticky lg:top-32 lg:pt-8">
+              <div className="inline-flex items-center gap-3 mb-8 rounded-2xl border border-primary/20 bg-primary/5 px-5 py-2.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/20">
+                  <DollarSign className="h-3.5 w-3.5 text-primary" />
+                </div>
+                <p className="text-xs font-bold text-primary uppercase tracking-wider">Zero platform fees</p>
               </div>
-              <h3 className="text-base sm:text-lg font-semibold text-card-foreground">Pay Per Campaign</h3>
-              <p className="mt-2 text-xs sm:text-sm text-muted-foreground">
-                We take a small commission on each live-shopping booking. No subscriptions, no hidden fees, no cost until a campaign runs.
+
+              <h1 className="text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl leading-[1.05]">
+                We only win
+                <br />
+                <span className="text-primary">when you win.</span>
+              </h1>
+
+              <p className="mt-6 max-w-md text-lg leading-relaxed text-muted-foreground">
+                No subscriptions. No upfront costs. Just a small success fee
+                when a campaign actually delivers results.
               </p>
+
+              <div className="mt-8 flex flex-wrap gap-4">
+                <Button size="lg" className="rounded-full px-8 text-base font-bold shadow-lg shadow-primary/20 h-12" asChild>
+                  <Link to="/auth">Get Started Free <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                </Button>
+                <a href="#contact" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 self-center">
+                  Talk to sales <ArrowRight className="h-3 w-3" />
+                </a>
+              </div>
+
+              <div className="mt-10 flex flex-col gap-3 text-sm text-muted-foreground">
+                <span className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-400" /> No credit card required</span>
+                <span className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-400" /> Cancel anytime</span>
+                <span className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-400" /> Money-back guarantee</span>
+              </div>
             </div>
 
-            <div className="rounded-2xl border border-border/50 bg-card p-4 sm:p-6 shadow-sm text-center min-w-0">
-              <div className="mx-auto mb-3 sm:mb-4 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <ShieldCheck className="h-5 w-5 sm:h-6 sm:w-6" />
+            {/* Right — pricing cards stacked */}
+            <div className="space-y-5">
+              {/* For Brands — highlighted */}
+              <div className="rounded-2xl border-2 border-primary bg-card p-6 sm:p-8 relative">
+                <Badge className="absolute -top-3 right-6 bg-primary text-primary-foreground text-xs px-3 py-1">Most Popular</Badge>
+                <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-2">For Brands</p>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-3xl font-black text-foreground">$0</span>
+                  <span className="text-muted-foreground text-sm">to start</span>
+                </div>
+                <p className="text-sm text-muted-foreground mb-6">Pay per campaign. Small commission on successful bookings.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-6">
+                  {[
+                    "Browse all creators for free",
+                    "Direct messaging & deal rooms",
+                    "Offer negotiation",
+                    "E-signed contracts",
+                    "Secure escrow payments",
+                    "Real-time stream analytics",
+                    "Shipment tracking",
+                    "Money-back guarantee",
+                  ].map((item) => (
+                    <div key={item} className="flex items-start gap-2 text-sm">
+                      <Check className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                      <span className="text-foreground">{item}</span>
+                    </div>
+                  ))}
+                </div>
+                <Button className="w-full rounded-full h-11 font-semibold" asChild>
+                  <Link to="/auth">Start a Campaign <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
+                </Button>
               </div>
-              <h3 className="text-base sm:text-lg font-semibold text-card-foreground">Escrow Protection</h3>
-              <p className="mt-2 text-xs sm:text-sm text-muted-foreground">
-                Your payment is held in escrow. If the creator doesn't fulfill their part of the contract, you get your money back. Guaranteed.
-              </p>
-            </div>
 
-            <div className="rounded-2xl border border-border/50 bg-card p-4 sm:p-6 shadow-sm text-center min-w-0">
-              <div className="mx-auto mb-3 sm:mb-4 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <Users className="h-5 w-5 sm:h-6 sm:w-6" />
+              {/* Bottom row: Creator + Enterprise side by side */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {/* For Creators */}
+                <div className="rounded-2xl border border-border bg-card p-6 flex flex-col">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">For Creators</p>
+                  <div className="flex items-baseline gap-1 mb-1">
+                    <span className="text-3xl font-black text-foreground">$0</span>
+                    <span className="text-muted-foreground text-sm">/forever</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-5">Keep 100% of your earnings.</p>
+                  <div className="space-y-2.5 flex-1">
+                    {[
+                      "Free profile",
+                      "Get discovered by brands",
+                      "E-signed contracts",
+                      "Keep all commissions",
+                      "Venmo / PayPal / Zelle",
+                    ].map((item) => (
+                      <div key={item} className="flex items-start gap-2 text-sm">
+                        <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                        <span className="text-foreground">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <Button className="w-full mt-6 rounded-full h-10 text-sm" variant="outline" asChild>
+                    <Link to="/auth">Join as Creator</Link>
+                  </Button>
+                </div>
+
+                {/* Enterprise */}
+                <div className="rounded-2xl border border-border bg-card p-6 flex flex-col">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Enterprise</p>
+                  <div className="flex items-baseline gap-1 mb-1">
+                    <span className="text-3xl font-black text-foreground">Custom</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-5">Volume pricing + dedicated support.</p>
+                  <div className="space-y-2.5 flex-1">
+                    {[
+                      "Everything in Brand plan",
+                      "Account manager",
+                      "Multi-host campaigns",
+                      "Volume discounts",
+                      "Custom reporting",
+                    ].map((item) => (
+                      <div key={item} className="flex items-start gap-2 text-sm">
+                        <Check className="h-3.5 w-3.5 text-accent shrink-0 mt-0.5" />
+                        <span className="text-foreground">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <Button className="w-full mt-6 rounded-full h-10 text-sm" variant="outline" asChild>
+                    <a href="#contact">Contact Sales</a>
+                  </Button>
+                </div>
               </div>
-              <h3 className="text-base sm:text-lg font-semibold text-card-foreground">Vetted College Hosts</h3>
-              <p className="mt-2 text-xs sm:text-sm text-muted-foreground">
-                Every creator on GMV.live is a verified college student with live-shopping experience. No guesswork, no unreliable hosts.
-              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ═══════ COMPARISON TABLE ═══════ */}
-      <section className="py-12 sm:py-16 lg:py-20 xl:py-24">
+      {/* ═══════════════════════════════════════════
+          VALUE PROPS
+      ═══════════════════════════════════════════ */}
+      <section className="py-24 sm:py-32 lg:py-40">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-4">What you get</p>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              More than just a marketplace
+            </h2>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { icon: DollarSign, title: "Pay Per Campaign", desc: "Small commission on each booking. No subscriptions, no hidden fees, no cost until a campaign runs." },
+              { icon: ShieldCheck, title: "Escrow Protection", desc: "Payment held in escrow. If the creator doesn't deliver, you get your money back. Guaranteed." },
+              { icon: Users, title: "Vetted Creators", desc: "Every creator on GMV.live is verified with live-shopping experience. No guesswork." },
+              { icon: FileText, title: "E-Signed Contracts", desc: "Generate and sign contracts in-app. Terms are locked before any payment happens." },
+              { icon: BarChart3, title: "Real-Time Analytics", desc: "Track viewers, GMV, orders, and conversion rate as the stream happens." },
+              { icon: Zap, title: "Instant Setup", desc: "No onboarding calls. Sign up, browse creators, and send your first offer in minutes." },
+            ].map((f) => (
+              <div key={f.title} className="rounded-2xl border border-border bg-card p-6 sm:p-8 hover:border-primary/20 transition-colors">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary mb-5">
+                  <f.icon className="h-5 w-5" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground">{f.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          COMPARISON TABLE
+      ═══════════════════════════════════════════ */}
+      <section className="py-24 sm:py-32 lg:py-40">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-center text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl mb-3 sm:mb-4">
-            GMV.live vs. The Rest
-          </h2>
-          <p className="mx-auto mb-8 sm:mb-12 max-w-xl text-center text-sm sm:text-base text-muted-foreground">
-            See how we stack up against agencies and other platforms.
-          </p>
+          <div className="text-center mb-14">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-4">Comparison</p>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              GMV.live vs. Agencies
+            </h2>
+            <p className="mt-4 text-muted-foreground">
+              See why brands choose us over traditional influencer agencies.
+            </p>
+          </div>
 
           <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <div className="min-w-[480px] sm:min-w-0 overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm">
-              <table className="w-full text-xs sm:text-sm">
+            <div className="min-w-[480px] sm:min-w-0 overflow-hidden rounded-2xl border border-border bg-card">
+              <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border">
-                    <th className="p-3 sm:p-4 text-left font-medium text-muted-foreground">Feature</th>
-                    <th className="p-3 sm:p-4 text-center font-semibold text-primary">GMV.live</th>
-                    <th className="p-3 sm:p-4 text-center font-medium text-muted-foreground">Agencies</th>
+                  <tr className="border-b border-border bg-secondary/30">
+                    <th className="p-4 text-left font-medium text-muted-foreground">Feature</th>
+                    <th className="p-4 text-center font-bold text-primary">GMV.live</th>
+                    <th className="p-4 text-center font-medium text-muted-foreground">Agencies</th>
                   </tr>
                 </thead>
                 <tbody>
                   {comparisonRows.map((row, i) => (
-                    <tr key={i} className="border-b border-border/50 last:border-0">
-                      <td className="p-3 sm:p-4 text-card-foreground">{row.feature}</td>
-                      <td className="p-3 sm:p-4 text-center">
+                    <tr key={i} className="border-b border-border/30 last:border-0 hover:bg-secondary/10 transition-colors">
+                      <td className="p-4 text-foreground">{row.feature}</td>
+                      <td className="p-4 text-center">
                         {row.us === true ? (
-                          <Check className="mx-auto h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                          <div className="flex items-center justify-center">
+                            <div className="h-6 w-6 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                              <Check className="h-3.5 w-3.5 text-emerald-400" />
+                            </div>
+                          </div>
                         ) : (
-                          <X className="mx-auto h-4 w-4 sm:h-5 sm:w-5 text-destructive" />
+                          <X className="mx-auto h-4 w-4 text-destructive" />
                         )}
                       </td>
-                      <td className="p-3 sm:p-4 text-center">
+                      <td className="p-4 text-center">
                         {row.them === true ? (
-                          <Check className="mx-auto h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                          <Check className="mx-auto h-4 w-4 text-emerald-400" />
                         ) : row.them === "Partial" ? (
-                          <span className="text-xs font-medium text-muted-foreground">Partial</span>
+                          <span className="text-xs font-medium text-amber-400">Partial</span>
                         ) : (
-                          <X className="mx-auto h-4 w-4 sm:h-5 sm:w-5 text-destructive" />
+                          <div className="flex items-center justify-center">
+                            <div className="h-6 w-6 rounded-full bg-destructive/10 flex items-center justify-center">
+                              <X className="h-3.5 w-3.5 text-destructive" />
+                            </div>
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -121,46 +291,145 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* ═══════ CTA ═══════ */}
-      <section className="py-12 sm:py-16 lg:py-20 xl:py-28">
-        <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
-            Ready to Go Live?
+      {/* ═══════════════════════════════════════════
+          CTA
+      ═══════════════════════════════════════════ */}
+      <section className="py-28 sm:py-36">
+        <div className="mx-auto max-w-2xl px-4 text-center">
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+            Ready to go live?
           </h2>
-          <p className="mx-auto mt-3 sm:mt-4 max-w-xl text-sm sm:text-base text-muted-foreground">
-            Sign up and start connecting with vetted college creators. Completely free.
+          <p className="mt-5 text-lg text-muted-foreground">
+            Join hundreds of brands and creators already on GMV.live. It's free to start.
           </p>
-          <div className="mt-8 sm:mt-10">
-            <Button size="lg" className="rounded-full px-6 sm:px-8 text-sm sm:text-base font-bold" asChild>
-              <Link to="/auth">
-                Get Started <ChevronRight className="ml-1.5 h-4 w-4" />
-              </Link>
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Button size="lg" className="rounded-full px-8 text-base font-bold shadow-lg shadow-primary/20 h-12" asChild>
+              <Link to="/auth">Get Started Free <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
           </div>
         </div>
       </section>
 
-      {/* ═══════ FOOTER ═══════ */}
-      <footer className="border-t border-border py-10 sm:py-12">
+      {/* ═══════════════════════════════════════════
+          CONTACT US
+      ═══════════════════════════════════════════ */}
+      <section id="contact" className="py-24 sm:py-32 lg:py-40">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-12 lg:grid-cols-2">
+            {/* Left — info */}
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-4">Get in touch</p>
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                Have questions? We'd love to help.
+              </h2>
+              <p className="mt-5 text-muted-foreground leading-relaxed">
+                Whether you're a brand exploring live commerce for the first time
+                or a creator with questions about getting started — reach out.
+                We usually respond within a few hours.
+              </p>
+
+              <div className="mt-10 space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Mail className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Email</p>
+                    <a href="mailto:support@gmv.live" className="text-sm text-primary hover:underline">support@gmv.live</a>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <MessageSquare className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Live Chat</p>
+                    <p className="text-sm text-muted-foreground">Available Mon-Fri, 9am-6pm PST</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Phone className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Response Time</p>
+                    <p className="text-sm text-muted-foreground">Usually within 2-4 hours</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right — form */}
+            <div className="rounded-2xl border border-border bg-card p-6 sm:p-8">
+              <h3 className="text-lg font-bold text-foreground mb-6">Send us a message</h3>
+              <form onSubmit={handleContact} className="space-y-5">
+                <div className="space-y-1.5">
+                  <Label htmlFor="contact-name" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Name</Label>
+                  <Input
+                    id="contact-name"
+                    value={contactForm.name}
+                    onChange={(e) => setContactForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Your name"
+                    className="h-11 bg-secondary/50 border-border/50"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="contact-email" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Email</Label>
+                  <Input
+                    id="contact-email"
+                    type="email"
+                    value={contactForm.email}
+                    onChange={(e) => setContactForm(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="you@company.com"
+                    className="h-11 bg-secondary/50 border-border/50"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="contact-message" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Message</Label>
+                  <Textarea
+                    id="contact-message"
+                    value={contactForm.message}
+                    onChange={(e) => setContactForm(prev => ({ ...prev, message: e.target.value }))}
+                    placeholder="Tell us what you need help with..."
+                    rows={4}
+                    className="bg-secondary/50 border-border/50 resize-none"
+                  />
+                </div>
+                <Button type="submit" disabled={sending} className="w-full h-11 rounded-full font-semibold">
+                  {sending ? "Sending..." : "Send Message"}
+                </Button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          FOOTER
+      ═══════════════════════════════════════════ */}
+      <footer className="border-t border-border py-12 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-8 sm:grid-cols-3">
             <div>
-              <p className="text-base sm:text-lg font-bold text-foreground"><em>GMV.live</em></p>
-              <p className="mt-2 text-xs sm:text-sm text-muted-foreground">support@GMV.live</p>
+              <div className="flex items-center gap-2">
+                <img src="/images/gmv-logo-mark.svg" alt="GMV.live" className="h-7 w-7" />
+                <span className="text-lg font-bold">GMV<span className="font-normal text-muted-foreground">.live</span></span>
+              </div>
+              <p className="mt-3 text-sm text-muted-foreground">The live commerce marketplace.</p>
+              <p className="mt-1 text-sm text-muted-foreground">support@gmv.live</p>
             </div>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <Link to="/for-brands" className="block hover:text-foreground">For Brands</Link>
-              <Link to="/" className="block hover:text-foreground">For Creators</Link>
-              <Link to="/pricing" className="block hover:text-foreground">Pricing</Link>
+            <div className="space-y-2.5 text-sm text-muted-foreground">
+              <Link to="/for-brands" className="block hover:text-foreground transition-colors">For Brands</Link>
+              <Link to="/" className="block hover:text-foreground transition-colors">For Creators</Link>
+              <Link to="/pricing" className="block hover:text-foreground transition-colors">Pricing</Link>
+              <Link to="/blog" className="block hover:text-foreground transition-colors">Blog</Link>
             </div>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <Link to="/coming-soon" className="block hover:text-foreground">Privacy Policy</Link>
-              <Link to="/coming-soon" className="block hover:text-foreground">Terms of Use</Link>
+            <div className="space-y-2.5 text-sm text-muted-foreground">
+              <Link to="/coming-soon" className="block hover:text-foreground transition-colors">Privacy Policy</Link>
+              <Link to="/coming-soon" className="block hover:text-foreground transition-colors">Terms of Use</Link>
             </div>
           </div>
-          <p className="mt-8 text-xs text-muted-foreground">
-            © {new Date().getFullYear()} <em>GMV.live</em>. All rights reserved.
-          </p>
+          <p className="mt-10 text-xs text-muted-foreground">&copy; {new Date().getFullYear()} GMV.live. All rights reserved.</p>
         </div>
       </footer>
     </div>

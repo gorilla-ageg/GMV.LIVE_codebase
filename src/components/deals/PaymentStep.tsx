@@ -18,6 +18,7 @@ interface PaymentStepProps {
   dealStatus: string;
   dealRate: number;
   creatorUserId: string;
+  onTabChange?: (tab: string) => void;
 }
 
 const PAYMENT_STATUS_BEFORE_CONTRACT = [
@@ -31,6 +32,7 @@ const PaymentStep = ({
   dealStatus,
   dealRate,
   creatorUserId,
+  onTabChange,
 }: PaymentStepProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -65,7 +67,7 @@ const PaymentStep = ({
     enabled: !!dealId,
   });
 
-  const paymentStatus = (deal as Record<string, unknown>)?.payment_status as string || "unpaid";
+  const paymentStatus = deal?.payment_status || "unpaid";
 
   const markPaymentSent = useMutation({
     mutationFn: async () => {
@@ -74,18 +76,18 @@ const PaymentStep = ({
         .update({
           payment_status: "sent",
           payment_method_used: creatorPayment?.payment_method || null,
-        } as Record<string, unknown>)
+        })
         .eq("id", dealId);
       if (dealError) throw dealError;
 
-      const { error: msgError } = await supabase.from("messages").insert({
+      // System message is best-effort — don't fail the whole operation if RLS blocks it
+      await supabase.from("messages").insert({
         conversation_id: conversationId,
         sender_id: user!.id,
         content: `Payment of $${dealRate.toLocaleString()} sent via ${creatorPayment?.payment_method || "direct transfer"}`,
         message_type: "system_event",
         metadata: { event_type: "payment_sent" },
       });
-      if (msgError) throw msgError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deal-payment", dealId] });
@@ -101,18 +103,18 @@ const PaymentStep = ({
     mutationFn: async () => {
       const { error: dealError } = await supabase
         .from("deals")
-        .update({ payment_status: "confirmed" } as Record<string, unknown>)
+        .update({ payment_status: "confirmed" })
         .eq("id", dealId);
       if (dealError) throw dealError;
 
-      const { error: msgError } = await supabase.from("messages").insert({
+      // System message is best-effort — don't fail the whole operation if RLS blocks it
+      await supabase.from("messages").insert({
         conversation_id: conversationId,
         sender_id: user!.id,
         content: "Payment confirmed received",
         message_type: "system_event",
         metadata: { event_type: "payment_confirmed" },
       });
-      if (msgError) throw msgError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deal-payment", dealId] });
@@ -257,9 +259,9 @@ const PaymentStep = ({
                 <span className="font-bold text-foreground">
                   ${dealRate.toLocaleString()}
                 </span>
-                {(deal as Record<string, unknown>)?.payment_method_used && (
+                {deal?.payment_method_used && (
                   <> via <span className="font-medium text-foreground">
-                    {(deal as Record<string, unknown>).payment_method_used as string}
+                    {deal.payment_method_used}
                   </span></>
                 )}
               </p>
@@ -281,10 +283,8 @@ const PaymentStep = ({
                 )}
                 Confirm Received
               </Button>
-              <Button variant="outline" className="gap-2" asChild>
-                <a href={`#chat`}>
-                  <MessageSquare className="h-4 w-4" /> Message Brand
-                </a>
+              <Button variant="outline" className="gap-2" onClick={() => onTabChange?.("chat")}>
+                <MessageSquare className="h-4 w-4" /> Message Brand
               </Button>
             </div>
           </CardContent>

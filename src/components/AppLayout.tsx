@@ -84,9 +84,14 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
         "flex items-center border-b border-border px-4",
         collapsed ? "h-16 justify-center" : "h-16 justify-between"
       )}>
-        {!collapsed && (
-          <Link to="/dashboard" className="text-lg font-bold text-foreground">
-            GMV.live
+        {!collapsed ? (
+          <Link to="/dashboard" className="flex items-center gap-2.5 text-xl font-bold text-foreground">
+            <img src="/images/gmv-logo-mark.svg" alt="GMV.live" className="h-10 w-10" />
+            <span>GMV<span className="font-normal text-muted-foreground">.live</span></span>
+          </Link>
+        ) : (
+          <Link to="/dashboard" className="flex items-center justify-center">
+            <img src="/images/gmv-logo-mark.svg" alt="GMV.live" className="h-11 w-11" />
           </Link>
         )}
         <button
@@ -216,8 +221,9 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
           >
             <Menu className="h-6 w-6" />
           </button>
-          <Link to="/dashboard" className="text-lg font-bold text-foreground">
-            GMV.live
+          <Link to="/dashboard" className="flex items-center gap-2 text-lg font-bold text-foreground">
+            <img src="/images/gmv-logo-mark.svg" alt="GMV.live" className="h-7 w-7" />
+            <span>GMV<span className="font-normal text-muted-foreground">.live</span></span>
           </Link>
         </header>
 
