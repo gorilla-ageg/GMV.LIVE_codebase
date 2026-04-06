@@ -10,6 +10,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import AppLayout from "@/components/AppLayout";
+import ReportButton from "@/components/ReportButton";
 import OfferModal from "@/components/deals/OfferModal";
 import { useState } from "react";
 import {
@@ -73,13 +74,15 @@ const CreatorDetail = () => {
   const handleStartConversation = async () => {
     if (!user || !creator) return;
 
-    // Check for existing conversation
-    const { data: existing } = await supabase
+    // Check for existing conversations (use limit(1) to avoid maybeSingle error with multiple rows)
+    const { data: existingRows } = await supabase
       .from("conversations")
       .select("id, deals(id)")
       .eq("brand_user_id", user.id)
       .eq("creator_user_id", creator.user_id)
-      .maybeSingle();
+      .limit(1);
+
+    const existing = existingRows?.[0];
 
     if (existing) {
       // If deal exists, go to deal room; otherwise create one
@@ -87,13 +90,29 @@ const CreatorDetail = () => {
       if (dealId) {
         navigate(`/deals/${dealId}`);
       } else {
-        // Create deal for this conversation
+        // Check if a deal already exists (race condition guard)
+        const { data: existingDeal } = await supabase
+          .from("deals")
+          .select("id")
+          .eq("conversation_id", existing.id)
+          .limit(1)
+          .maybeSingle();
+        if (existingDeal) {
+          navigate(`/deals/${existingDeal.id}`);
+          return;
+        }
         const { data: deal, error } = await supabase
           .from("deals")
           .insert({ conversation_id: existing.id, status: "negotiating" as never })
           .select()
           .single();
         if (error) {
+          // If duplicate key error, find the existing deal
+          if (error.code === "23505") {
+            const { data: fallback } = await supabase
+              .from("deals").select("id").eq("conversation_id", existing.id).limit(1).maybeSingle();
+            if (fallback) { navigate(`/deals/${fallback.id}`); return; }
+          }
           toast({ title: "Error", description: error.message, variant: "destructive" });
           return;
         }
@@ -109,6 +128,10 @@ const CreatorDetail = () => {
       .select()
       .single();
     if (convoErr) {
+      // If conversation already exists (race condition), retry lookup
+      if (convoErr.code === "23505") {
+        return handleStartConversation();
+      }
       toast({ title: "Error", description: convoErr.message, variant: "destructive" });
       return;
     }
@@ -119,6 +142,11 @@ const CreatorDetail = () => {
       .select()
       .single();
     if (dealErr) {
+      if (dealErr.code === "23505") {
+        const { data: fallback } = await supabase
+          .from("deals").select("id").eq("conversation_id", convo.id).limit(1).maybeSingle();
+        if (fallback) { navigate(`/deals/${fallback.id}`); return; }
+      }
       toast({ title: "Error", description: dealErr.message, variant: "destructive" });
       return;
     }
@@ -132,13 +160,15 @@ const CreatorDetail = () => {
       let convoId: string;
       let dealId: string;
 
-      // Check for existing conversation
-      const { data: existing } = await supabase
+      // Check for existing conversations (use limit(1) to avoid maybeSingle error with multiple rows)
+      const { data: existingRows } = await supabase
         .from("conversations")
         .select("id, deals(id)")
         .eq("brand_user_id", user.id)
         .eq("creator_user_id", creator.user_id)
-        .maybeSingle();
+        .limit(1);
+
+      const existing = existingRows?.[0];
 
       if (existing) {
         convoId = existing.id;
@@ -146,13 +176,27 @@ const CreatorDetail = () => {
         if (existingDeal) {
           dealId = existingDeal.id;
         } else {
-          const { data: deal, error: dealErr } = await supabase
-            .from("deals")
-            .insert({ conversation_id: convoId, status: "negotiating" as never })
-            .select()
-            .single();
-          if (dealErr) throw dealErr;
-          dealId = deal.id;
+          // Double-check for deal before inserting (race condition guard)
+          const { data: checkDeal } = await supabase
+            .from("deals").select("id").eq("conversation_id", convoId).limit(1).maybeSingle();
+          if (checkDeal) {
+            dealId = checkDeal.id;
+          } else {
+            const { data: deal, error: dealErr } = await supabase
+              .from("deals")
+              .insert({ conversation_id: convoId, status: "negotiating" as never })
+              .select()
+              .single();
+            if (dealErr) {
+              if (dealErr.code === "23505") {
+                const { data: fb } = await supabase
+                  .from("deals").select("id").eq("conversation_id", convoId).limit(1).maybeSingle();
+                if (fb) { dealId = fb.id; } else throw dealErr;
+              } else throw dealErr;
+            } else {
+              dealId = deal.id;
+            }
+          }
         }
       } else {
         const { data: convo, error } = await supabase
@@ -173,7 +217,7 @@ const CreatorDetail = () => {
       }
 
       await supabase.from("deal_offers").insert({
-        deal_id: dealId,
+        deal_id: dealId!,
         sender_id: user.id,
         rate: offer.rate,
         hourly_rate: 0,
@@ -186,15 +230,16 @@ const CreatorDetail = () => {
         status: "pending",
       } as never);
 
+      // Best-effort system message (don't throw on failure)
       await supabase.from("messages").insert({
         conversation_id: convoId,
         sender_id: user.id,
         content: `New offer: $${offer.rate.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
         message_type: "offer",
         metadata: { offer_rate: offer.rate },
-      });
+      }).then(() => {});
 
-      navigate(`/deals/${dealId}`);
+      navigate(`/deals/${dealId!}`);
     },
     onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
@@ -299,6 +344,7 @@ const CreatorDetail = () => {
                 <Send className="h-4 w-4" /> Send Offer
               </Button>
             )}
+            <ReportButton reportType="user" reportedUserId={creator.user_id} variant="icon" />
           </div>
         </div>
 

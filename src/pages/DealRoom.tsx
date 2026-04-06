@@ -235,14 +235,13 @@ const DealRoom = () => {
 
   const otherParty = (() => {
     if (isBrand) {
-      return { name: creatorProfile?.display_name || "Creator", avatarUrl: creatorProfile?.avatar_url || undefined };
+      return { name: creatorProfile?.display_name || "Creator", avatarUrl: creatorProfile?.avatar_url || undefined, userId: convo?.creator_user_id };
     }
-    // If the brand side is GMV Store, override display
     if (convo?.brand_user_id === GMV_STORE_BRAND_ID) {
       const b = getDisplayBrand(GMV_STORE_BRAND_ID);
-      return { name: b.name, avatarUrl: b.avatar };
+      return { name: b.name, avatarUrl: b.avatar, userId: convo?.brand_user_id };
     }
-    return { name: brandProfile?.display_name || "Brand", avatarUrl: brandProfile?.avatar_url || undefined };
+    return { name: brandProfile?.display_name || "Brand", avatarUrl: brandProfile?.avatar_url || undefined, userId: convo?.brand_user_id };
   })();
 
   return (

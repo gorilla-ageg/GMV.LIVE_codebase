@@ -3,16 +3,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DollarSign, Calendar, Send, Package, Eye, Video, Star, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import StatusBadge from "./StatusBadge";
+import ReportButton from "@/components/ReportButton";
 
 interface DealSummaryPanelProps {
   deal: {
+    id?: string;
     status: string;
     rate?: number | null;
     deliverables?: string | null;
     live_date?: string | null;
     usage_rights?: string[] | null;
   };
-  otherParty: { name: string; avatarUrl?: string };
+  otherParty: { name: string; avatarUrl?: string; userId?: string };
   isBrand: boolean;
   escrowAmount?: number;
   onCta: () => void;
@@ -79,6 +81,7 @@ const DealSummaryPanel = ({ deal, otherParty, isBrand, escrowAmount, onCta, ctaL
           <p className="font-semibold truncate">{otherParty.name}</p>
           <p className="text-xs text-muted-foreground">{isBrand ? "Creator" : "Brand"}</p>
         </div>
+        <ReportButton reportType="deal" dealId={deal.id} reportedUserId={otherParty.userId} variant="icon" />
       </div>
 
       {/* Status */}

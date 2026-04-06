@@ -9,6 +9,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import AppLayout from "@/components/AppLayout";
 import { getDisplayBrand } from "@/lib/gmv-store";
+import ReportButton from "@/components/ReportButton";
 import {
   ArrowLeft,
   MessageSquare,
@@ -236,10 +237,11 @@ const ProductDetail = () => {
           </div>
 
           {/* CTA button */}
-          <div className="flex gap-2 sm:pb-1 shrink-0">
+          <div className="flex gap-2 sm:pb-1 shrink-0 items-center">
             <Button onClick={handleStartConversation} className="gap-2">
               <MessageSquare className="h-4 w-4" /> Message Brand
             </Button>
+            <ReportButton reportType="product" productId={product.id} reportedUserId={product.brand_id} variant="icon" />
           </div>
         </div>
 

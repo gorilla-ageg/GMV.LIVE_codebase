@@ -111,6 +111,18 @@ const AdminDashboard = () => {
     },
   });
 
+  const { data: reports } = useQuery({
+    queryKey: ["admin-reports"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reports" as never)
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as { id: string; reporter_id: string; reported_user_id: string | null; deal_id: string | null; product_id: string | null; report_type: string; reason: string; description: string | null; status: string; created_at: string }[];
+    },
+  });
+
   // ─── Mutations ───
 
   const suspendMutation = useMutation({
@@ -192,6 +204,18 @@ const AdminDashboard = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-contact-messages"] });
       toast({ title: "Message deleted" });
+    },
+    onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  const updateReportStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase.from("reports" as never).update({ status } as never).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-reports"] });
+      toast({ title: "Report updated" });
     },
     onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
@@ -284,6 +308,13 @@ const AdminDashboard = () => {
               Messages {(contactMessages?.filter(m => !m.read).length ?? 0) > 0 && (
                 <span className="ml-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
                   {contactMessages?.filter(m => !m.read).length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="reports">
+              Reports {(reports?.filter(r => r.status === "pending").length ?? 0) > 0 && (
+                <span className="ml-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                  {reports?.filter(r => r.status === "pending").length}
                 </span>
               )}
             </TabsTrigger>
@@ -665,6 +696,53 @@ const AdminDashboard = () => {
               </div>
             ))}
             {!contactMessages?.length && <EmptyState text="No messages yet" />}
+          </TabsContent>
+
+          {/* ── Reports ── */}
+          <TabsContent value="reports" className="space-y-2 mt-4">
+            {reports?.map((report) => {
+              const statusColors: Record<string, string> = {
+                pending: "text-amber-400 border-amber-500/30 bg-amber-500/10",
+                reviewed: "text-blue-400 border-blue-500/30 bg-blue-500/10",
+                resolved: "text-emerald-400 border-emerald-500/30 bg-emerald-500/10",
+                dismissed: "text-muted-foreground border-border bg-secondary/50",
+              };
+              return (
+                <div key={report.id} className={`rounded-lg border px-4 py-4 ${report.status === "pending" ? "border-amber-500/20" : "border-border bg-card"}`}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="outline" className="text-[10px] capitalize">{report.report_type}</Badge>
+                        <Badge variant="outline" className={`text-[10px] capitalize ${statusColors[report.status] || ""}`}>{report.status}</Badge>
+                        <span className="text-xs font-semibold text-foreground">{report.reason}</span>
+                      </div>
+                      {report.description && (
+                        <p className="mt-1.5 text-sm text-muted-foreground">{report.description}</p>
+                      )}
+                      <div className="mt-2 flex flex-wrap gap-3 text-[10px] text-muted-foreground">
+                        <span>Reporter: {report.reporter_id.slice(0, 8)}...</span>
+                        {report.reported_user_id && <span>Reported: {report.reported_user_id.slice(0, 8)}...</span>}
+                        {report.deal_id && <span>Deal: {report.deal_id.slice(0, 8)}...</span>}
+                        {report.product_id && <span>Product: {report.product_id.slice(0, 8)}...</span>}
+                        <span>{new Date(report.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {report.status === "pending" && (
+                        <>
+                          <Button size="sm" variant="outline" onClick={() => updateReportStatus.mutate({ id: report.id, status: "reviewed" })}>Review</Button>
+                          <Button size="sm" variant="outline" onClick={() => updateReportStatus.mutate({ id: report.id, status: "dismissed" })}>Dismiss</Button>
+                        </>
+                      )}
+                      {report.status === "reviewed" && (
+                        <Button size="sm" onClick={() => updateReportStatus.mutate({ id: report.id, status: "resolved" })}>Resolve</Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            {!reports?.length && <EmptyState text="No reports yet" />}
           </TabsContent>
         </Tabs>
       </div>
