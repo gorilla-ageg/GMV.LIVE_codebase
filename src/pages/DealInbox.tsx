@@ -134,7 +134,7 @@ const DealInbox = () => {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Deals</h1>
         {role === "brand" && (
-          <Button asChild><Link to="/feed" className="gap-2"><Plus className="h-4 w-4" />New Deal</Link></Button>
+          <Button asChild><Link to="/browse" className="gap-2"><Plus className="h-4 w-4" />New Deal</Link></Button>
         )}
       </div>
 

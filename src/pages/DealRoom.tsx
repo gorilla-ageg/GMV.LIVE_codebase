@@ -10,9 +10,10 @@ import DealSummaryPanel from "@/components/deals/DealSummaryPanel";
 import DealChat from "@/components/deals/DealChat";
 import OfferModal from "@/components/deals/OfferModal";
 import ContractView from "@/components/deals/ContractView";
+import PaymentStep from "@/components/deals/PaymentStep";
 import ShipmentTracker from "@/components/deals/ShipmentTracker";
 import AnalyticsTab from "@/components/deals/AnalyticsTab";
-import { ArrowLeft, MessageSquare, FileText, Package, BarChart3, Loader2 } from "lucide-react";
+import { ArrowLeft, MessageSquare, FileText, DollarSign, Package, BarChart3, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Tables, Enums } from "@/integrations/supabase/types";
 
@@ -114,12 +115,15 @@ const DealRoom = () => {
       });
       if (offerError) throw offerError;
 
+      // Ensure deal is in negotiating status
+      await supabase.from("deals").update({ status: "negotiating" as DealStatus }).eq("id", id!);
+
       const { error: msgError } = await supabase.from("messages").insert({
         conversation_id: convo!.id,
         sender_id: user!.id,
-        content: `New offer: $${offer.rate.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
-        message_type: "offer",
-        metadata: { offer_rate: offer.rate },
+        content: `New offer sent: $${offer.rate.toLocaleString("en-US", { minimumFractionDigits: 2 })}${offer.liveDate ? `, live date ${new Date(offer.liveDate).toLocaleDateString()}` : ""}`,
+        message_type: "system_event",
+        metadata: { event_type: "offer_sent", offer_rate: offer.rate },
       });
       if (msgError) throw msgError;
     },
@@ -127,6 +131,7 @@ const DealRoom = () => {
       setOfferOpen(false);
       queryClient.invalidateQueries({ queryKey: ["deal-offers", id] });
       queryClient.invalidateQueries({ queryKey: ["deal-messages", convo?.id] });
+      queryClient.invalidateQueries({ queryKey: ["deal", id] });
       toast({ title: "Offer sent!" });
     },
     onError: (err: Error) => toast({ title: "Error sending offer", description: err.message, variant: "destructive" }),
@@ -134,24 +139,32 @@ const DealRoom = () => {
 
   const fundEscrowMutation = useMutation({
     mutationFn: async () => {
-      // Use the secure RPC function instead of manual insert
-      const { error: rpcError } = await supabase.rpc("fund_escrow", { _deal_id: id! });
-      if (rpcError) {
-        // Fallback to manual insert if RPC doesn't exist or fails
+      // Create escrow row in "pending" state first (if it doesn't already exist)
+      const { data: existingEscrow } = await supabase
+        .from("escrow_payments")
+        .select("id")
+        .eq("deal_id", id!)
+        .maybeSingle();
+
+      if (!existingEscrow) {
         const { error: insertError } = await supabase.from("escrow_payments").insert({
           deal_id: id!,
           amount: Number(deal?.rate) || 0,
-          status: "funded",
-          funded_at: new Date().toISOString(),
+          status: "pending",
         });
         if (insertError) throw insertError;
-
-        const { error: updateError } = await supabase
-          .from("deals")
-          .update({ status: "funded" as DealStatus })
-          .eq("id", id!);
-        if (updateError) throw updateError;
       }
+
+      // Use the secure RPC function to transition pending -> funded
+      const { error: rpcError } = await supabase.rpc("fund_escrow", { _deal_id: id! });
+      if (rpcError) throw rpcError;
+
+      // Update deal status
+      const { error: updateError } = await supabase
+        .from("deals")
+        .update({ status: "funded" as DealStatus })
+        .eq("id", id!);
+      if (updateError) throw updateError;
 
       const { error: msgError } = await supabase.from("messages").insert({
         conversation_id: convo!.id,
@@ -174,13 +187,11 @@ const DealRoom = () => {
   const handleCta = () => {
     const status = deal?.status;
     if (status === "negotiating") { setOfferOpen(true); return; }
-    // After agreement, direct to contract for signing first
     if (status === "agreed" || status === "signed") { setActiveTab("contract"); return; }
-    // After both sign, brand funds escrow
-    if (status === "contracted" && isBrand) { fundEscrowMutation.mutate(); return; }
-    if (status === "contracted" && !isBrand) { setActiveTab("contract"); return; }
+    // After both sign, go to payment (direct pay via Venmo/PayPal/Zelle)
+    if (status === "contracted") { setActiveTab("payment"); return; }
     if ((status === "escrow_funded" || status === "funded") && isBrand) { setActiveTab("shipment"); return; }
-    if ((status === "escrow_funded" || status === "funded") && !isBrand) { return; } // disabled CTA
+    if ((status === "escrow_funded" || status === "funded") && !isBrand) { setActiveTab("payment"); return; }
     if (status === "shipped") { setActiveTab("shipment"); return; }
     if (status === "delivered" && !isBrand) { setActiveTab("analytics"); return; }
     if (status === "live" || status === "in_progress") { setActiveTab("analytics"); return; }
@@ -250,6 +261,7 @@ const DealRoom = () => {
             <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent px-2 pt-2">
               <TabsTrigger value="chat" className="gap-1.5"><MessageSquare className="h-3.5 w-3.5" />Chat</TabsTrigger>
               <TabsTrigger value="contract" className="gap-1.5"><FileText className="h-3.5 w-3.5" />Contract</TabsTrigger>
+              <TabsTrigger value="payment" className="gap-1.5"><DollarSign className="h-3.5 w-3.5" />Payment</TabsTrigger>
               <TabsTrigger value="shipment" className="gap-1.5"><Package className="h-3.5 w-3.5" />Shipment</TabsTrigger>
               <TabsTrigger value="analytics" className="gap-1.5"><BarChart3 className="h-3.5 w-3.5" />Analytics</TabsTrigger>
             </TabsList>
@@ -262,10 +274,21 @@ const DealRoom = () => {
                 creatorUserId={convo.creator_user_id}
                 brandName={brandProfile?.display_name || "Brand"}
                 creatorName={creatorProfile?.display_name || "Creator"}
+                onTabChange={setActiveTab}
               />
             </TabsContent>
             <TabsContent value="contract" className="flex-1 overflow-y-auto m-0">
               <ContractView dealId={deal.id} conversationId={convo.id} />
+            </TabsContent>
+            <TabsContent value="payment" className="flex-1 overflow-y-auto m-0">
+              <PaymentStep
+                dealId={deal.id}
+                conversationId={convo.id}
+                isBrand={isBrand}
+                dealStatus={deal.status}
+                dealRate={Number(deal.rate) || 0}
+                creatorUserId={convo.creator_user_id}
+              />
             </TabsContent>
             <TabsContent value="shipment" className="flex-1 overflow-y-auto m-0">
               <ShipmentTracker dealId={deal.id} conversationId={convo.id} isBrand={isBrand} />

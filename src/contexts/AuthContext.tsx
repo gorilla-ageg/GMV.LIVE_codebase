@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-type AppRole = "creator" | "brand";
+type AppRole = "creator" | "brand" | "admin";
 
 interface AuthContextType {
   session: Session | null;
@@ -25,31 +25,14 @@ export const useAuth = () => {
   return ctx;
 };
 
-/**
- * Translate Supabase auth error messages into user-friendly strings.
- */
 function friendlyAuthError(error: { message: string }): string {
   const msg = error.message?.toLowerCase() ?? "";
-
-  if (msg.includes("invalid login credentials")) {
-    return "Incorrect email or password. Please try again.";
-  }
-  if (msg.includes("email not confirmed")) {
-    return "Please verify your email before logging in. Check your inbox for a confirmation link.";
-  }
-  if (msg.includes("user already registered") || msg.includes("already been registered")) {
-    return "An account with this email already exists. Try logging in instead.";
-  }
-  if (msg.includes("password") && msg.includes("at least")) {
-    return "Password must be at least 6 characters.";
-  }
-  if (msg.includes("rate limit") || msg.includes("too many requests")) {
-    return "Too many attempts. Please wait a moment and try again.";
-  }
-  if (msg.includes("network") || msg.includes("fetch")) {
-    return "Network error. Please check your connection and try again.";
-  }
-  // Fallback to the original message
+  if (msg.includes("invalid login credentials")) return "Incorrect email or password. Please try again.";
+  if (msg.includes("email not confirmed")) return "Please verify your email before logging in. Check your inbox for a confirmation link.";
+  if (msg.includes("user already registered") || msg.includes("already been registered")) return "An account with this email already exists. Try logging in instead.";
+  if (msg.includes("password") && msg.includes("at least")) return "Password must be at least 6 characters.";
+  if (msg.includes("rate limit") || msg.includes("too many requests")) return "Too many attempts. Please wait a moment and try again.";
+  if (msg.includes("network") || msg.includes("fetch")) return "Network error. Please check your connection and try again.";
   return error.message;
 }
 
@@ -62,65 +45,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async (userId: string) => {
-    try {
-      const [{ data: roleData }, { data: profile }] = await Promise.all([
-        supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", userId)
-          .maybeSingle(),
-        supabase
-          .from("profiles")
-          .select("onboarding_completed, onboarding_step")
-          .eq("id", userId)
-          .maybeSingle(),
-      ]);
-
-      setRole((roleData?.role as AppRole) ?? null);
-
-      if (profile) {
-        setOnboardingCompleted(!!profile.onboarding_completed);
-        setOnboardingStep(profile.onboarding_step ?? null);
-      } else {
-        // Profile row doesn't exist yet (new signup, trigger may not have fired).
-        // We'll create it below in ensureProfile, but for now treat as not onboarded.
-        setOnboardingCompleted(false);
-        setOnboardingStep(null);
-      }
-    } catch (error) {
-      console.error("Failed to fetch profile state:", error);
-      setRole(null);
+    const [{ data: roleData }, { data: profile }] = await Promise.all([
+      supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
+      supabase.from("profiles").select("onboarding_completed, onboarding_step").eq("id", userId).maybeSingle(),
+    ]);
+    setRole((roleData?.role as AppRole) ?? null);
+    if (profile) {
+      setOnboardingCompleted(!!profile.onboarding_completed);
+      setOnboardingStep(profile.onboarding_step ?? null);
+    } else {
       setOnboardingCompleted(false);
       setOnboardingStep(null);
     }
   }, []);
 
   const refreshProfile = useCallback(async () => {
-    if (user) {
-      await fetchProfile(user.id);
-    }
+    if (user) await fetchProfile(user.id);
   }, [user, fetchProfile]);
 
-  /**
-   * Ensure a profile row exists for the given user.
-   * This is a safety net in case the DB trigger hasn't fired or doesn't exist.
-   */
   const ensureProfile = useCallback(async (authUser: User) => {
     const { data: existing } = await supabase
       .from("profiles")
       .select("id")
       .eq("id", authUser.id)
       .maybeSingle();
-
     if (!existing) {
       const displayName =
         authUser.user_metadata?.display_name ||
         authUser.user_metadata?.full_name ||
         authUser.email?.split("@")[0] ||
         "User";
-
-      // Insert with a dummy role — it will be updated during onboarding role selection.
-      // The profiles table requires a role value, so we default to "creator".
       await supabase.from("profiles").insert({
         id: authUser.id,
         display_name: displayName,
@@ -134,25 +88,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let isMounted = true;
 
-    const applySession = (nextSession: Session | null) => {
-      if (!isMounted) return;
-      setSession(nextSession);
-      setUser(nextSession?.user ?? null);
-    };
-
     const bootstrap = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error("Failed to get session:", error);
-        }
+        const { data, error } = await Promise.race([
+          supabase.auth.getSession(),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000)),
+        ]) as Awaited<ReturnType<typeof supabase.auth.getSession>>;
+
+        if (error) console.error("Session error:", error);
         if (!isMounted) return;
 
-        applySession(data.session);
+        const currentSession = data.session;
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
 
-        if (data.session?.user) {
-          await ensureProfile(data.session.user);
-          await fetchProfile(data.session.user.id);
+        if (currentSession?.user) {
+          await ensureProfile(currentSession.user);
+          await fetchProfile(currentSession.user.id);
         } else {
           setRole(null);
           setOnboardingCompleted(false);
@@ -160,14 +112,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       } catch (err) {
         console.error("Auth bootstrap error:", err);
+        if (isMounted) {
+          setRole(null);
+          setOnboardingCompleted(false);
+          setOnboardingStep(null);
+        }
       } finally {
+        // Only set loading=false AFTER session + profile are fully resolved
         if (isMounted) setLoading(false);
       }
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, nextSession) => {
       if (!isMounted) return;
-      applySession(nextSession);
+      if (event === "INITIAL_SESSION") return; // bootstrap handles this
+
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
 
       if (!nextSession?.user) {
         setRole(null);
@@ -177,14 +138,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // On sign-up or sign-in, ensure profile exists then load it
       try {
         if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
           await ensureProfile(nextSession.user);
         }
         await fetchProfile(nextSession.user.id);
       } catch (err) {
-        console.error("Error in auth state change handler:", err);
+        console.error("Auth state change error:", err);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -200,31 +160,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, displayName: string) => {
     const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { display_name: displayName },
-        emailRedirectTo: window.location.origin,
-      },
+      email, password,
+      options: { data: { display_name: displayName }, emailRedirectTo: window.location.origin },
     });
-    if (error) {
-      throw new Error(friendlyAuthError(error));
-    }
+    if (error) throw new Error(friendlyAuthError(error));
   };
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      throw new Error(friendlyAuthError(error));
-    }
+    if (error) throw new Error(friendlyAuthError(error));
   };
 
   const signOut = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch (err) {
-      console.error("Sign-out error:", err);
-    }
+    try { await supabase.auth.signOut(); } catch (err) { console.error("Sign-out error:", err); }
     setSession(null);
     setUser(null);
     setRole(null);

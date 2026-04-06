@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Tag, Video, Loader2 } from "lucide-react";
 
 const OnboardingRole = () => {
-  const { user, loading, onboardingCompleted } = useAuth();
+  const { user, loading, onboardingCompleted, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -17,26 +17,29 @@ const OnboardingRole = () => {
     }
   }, [user, loading, navigate]);
 
-  // Redirect already-onboarded users to feed
+  // Redirect already-onboarded users to dashboard
   useEffect(() => {
     if (!loading && user && onboardingCompleted) {
-      navigate("/feed", { replace: true });
+      navigate("/dashboard", { replace: true });
     }
   }, [user, loading, onboardingCompleted, navigate]);
 
   const selectRole = async (role: "brand" | "creator") => {
     if (!user) return;
     try {
-      // Update profile with chosen role and onboarding step
+      // Set role via security definer function (populates user_roles table + profiles.role)
+      const { error: rpcError } = await supabase.rpc("set_user_role", { _role: role });
+      if (rpcError) throw rpcError;
+
+      // Update onboarding step only (role is set by the RPC)
       const { error: profileError } = await supabase
         .from("profiles")
-        .update({ role, onboarding_step: `${role}-1` })
+        .update({ onboarding_step: `${role}-1` })
         .eq("id", user.id);
       if (profileError) throw profileError;
 
-      // Set role via security definer function (populates user_roles table)
-      const { error: rpcError } = await supabase.rpc("set_user_role", { _role: role });
-      if (rpcError) throw rpcError;
+      // Refresh auth context so ProtectedRoute sees the updated role and onboarding step
+      await refreshProfile();
 
       navigate(`/onboarding/${role}`);
     } catch (err: any) {
@@ -63,7 +66,7 @@ const OnboardingRole = () => {
     <div className="flex min-h-screen flex-col bg-background">
       <div className="border-b border-border bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-2xl items-center px-4">
-          <Link to="/" className="text-xl font-bold text-foreground">GMB.live</Link>
+          <Link to="/" className="text-xl font-bold text-foreground">GMV.live</Link>
         </div>
       </div>
 

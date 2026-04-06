@@ -24,9 +24,14 @@ interface DealChatProps {
   creatorUserId: string;
   brandName: string;
   creatorName: string;
+  onTabChange?: (tab: string) => void;
 }
 
-const DealChat = ({ conversationId, dealId, dealStatus, brandUserId, creatorUserId, brandName, creatorName }: DealChatProps) => {
+const DealChat = ({
+  conversationId, dealId, dealStatus,
+  brandUserId, creatorUserId, brandName, creatorName,
+  onTabChange,
+}: DealChatProps) => {
   const { user } = useAuth();
   const [message, setMessage] = useState("");
   const [counterOpen, setCounterOpen] = useState(false);
@@ -76,14 +81,8 @@ const DealChat = ({ conversationId, dealId, dealStatus, brandUserId, creatorUser
       .channel(`deal-chat-${conversationId}`)
       .on(
         "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `conversation_id=eq.${conversationId}`,
-        },
+        { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
         (payload) => {
-          // Only invalidate if the message wasn't sent by us (we already optimistically updated)
           if (payload.new && (payload.new as Message).sender_id !== user?.id) {
             queryClient.invalidateQueries({ queryKey: ["deal-messages", conversationId] });
           }
@@ -91,26 +90,15 @@ const DealChat = ({ conversationId, dealId, dealStatus, brandUserId, creatorUser
       )
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "deal_offers",
-          filter: `deal_id=eq.${dealId}`,
-        },
+        { event: "*", schema: "public", table: "deal_offers", filter: `deal_id=eq.${dealId}` },
         () => {
           queryClient.invalidateQueries({ queryKey: ["deal-offers", dealId] });
           queryClient.invalidateQueries({ queryKey: ["deal", dealId] });
         }
       )
-      .subscribe((status) => {
-        if (status === "CHANNEL_ERROR") {
-          console.error("Realtime channel error for deal chat:", conversationId);
-        }
-      });
+      .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [conversationId, dealId, queryClient, user?.id]);
 
   // Auto-scroll to bottom
@@ -118,6 +106,7 @@ const DealChat = ({ conversationId, dealId, dealStatus, brandUserId, creatorUser
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, offers]);
 
+  // Send text message
   const sendMutation = useMutation({
     mutationFn: async (content: string) => {
       const { error } = await supabase.from("messages").insert({
@@ -135,12 +124,13 @@ const DealChat = ({ conversationId, dealId, dealStatus, brandUserId, creatorUser
     onError: (err: Error) => toast({ title: "Failed to send message", description: err.message, variant: "destructive" }),
   });
 
+  // Accept offer
   const acceptMutation = useMutation({
     mutationFn: async (offerId: string) => {
       const offer = offers?.find((o) => o.id === offerId);
       if (!offer) throw new Error("Offer not found");
 
-      // Update offer status
+      // Update offer status to accepted
       const { error: offerErr } = await supabase
         .from("deal_offers")
         .update({ status: "accepted" })
@@ -184,7 +174,7 @@ const DealChat = ({ conversationId, dealId, dealStatus, brandUserId, creatorUser
       const { error: msgErr } = await supabase.from("messages").insert({
         conversation_id: conversationId,
         sender_id: user!.id,
-        content: "Deal terms agreed. Contract has been generated.",
+        content: "Offer accepted. Contract has been generated — please review and sign.",
         message_type: "system_event",
         metadata: { event_type: "deal_agreed" },
       });
@@ -195,11 +185,15 @@ const DealChat = ({ conversationId, dealId, dealStatus, brandUserId, creatorUser
       queryClient.invalidateQueries({ queryKey: ["deal", dealId] });
       queryClient.invalidateQueries({ queryKey: ["deal-messages", conversationId] });
       queryClient.invalidateQueries({ queryKey: ["contract", dealId] });
+      queryClient.invalidateQueries({ queryKey: ["deal-signatures", dealId] });
       toast({ title: "Offer accepted! Contract generated." });
+      // Auto-switch to contract tab
+      onTabChange?.("contract");
     },
     onError: (err: Error) => toast({ title: "Failed to accept offer", description: err.message, variant: "destructive" }),
   });
 
+  // Counter offer
   const counterMutation = useMutation({
     mutationFn: async (offer: { rate: number; deliverables: string; liveDate: string; usageRights: string[]; note: string }) => {
       // Mark existing pending offers as countered
@@ -208,6 +202,7 @@ const DealChat = ({ conversationId, dealId, dealStatus, brandUserId, creatorUser
         const { error } = await supabase.from("deal_offers").update({ status: "countered" }).eq("id", p.id);
         if (error) throw error;
       }
+
       // Create new offer
       const { error: insertErr } = await supabase.from("deal_offers").insert({
         deal_id: dealId,
@@ -224,13 +219,17 @@ const DealChat = ({ conversationId, dealId, dealStatus, brandUserId, creatorUser
       });
       if (insertErr) throw insertErr;
 
-      // Chat message
+      // Ensure deal is in negotiating status
+      await supabase.from("deals").update({ status: "negotiating" }).eq("id", dealId);
+
+      // System message
+      const senderLabel = user!.id === brandUserId ? brandName : creatorName;
       const { error: msgErr } = await supabase.from("messages").insert({
         conversation_id: conversationId,
         sender_id: user!.id,
-        content: `Counter offer: $${offer.rate.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
-        message_type: "offer",
-        metadata: { offer_rate: offer.rate },
+        content: `${senderLabel} sent a counter offer: $${offer.rate.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
+        message_type: "system_event",
+        metadata: { event_type: "counter_offer", offer_rate: offer.rate },
       });
       if (msgErr) throw msgErr;
     },
@@ -239,6 +238,7 @@ const DealChat = ({ conversationId, dealId, dealStatus, brandUserId, creatorUser
       setCounterDefaults(null);
       queryClient.invalidateQueries({ queryKey: ["deal-offers", dealId] });
       queryClient.invalidateQueries({ queryKey: ["deal-messages", conversationId] });
+      queryClient.invalidateQueries({ queryKey: ["deal", dealId] });
       toast({ title: "Counter offer sent!" });
     },
     onError: (err: Error) => toast({ title: "Failed to send counter", description: err.message, variant: "destructive" }),
@@ -256,7 +256,7 @@ const DealChat = ({ conversationId, dealId, dealStatus, brandUserId, creatorUser
 
   const handleCounter = useCallback((offer: DealOffer) => {
     setCounterDefaults({
-      rate: Number(offer.rate || (offer.hourly_rate * offer.hours)),
+      rate: Number(offer.rate || ((offer.hourly_rate ?? 0) * (offer.hours ?? 0))),
       deliverables: offer.deliverables || "",
       liveDate: offer.live_date || "",
       usageRights: offer.usage_rights || [],
@@ -264,12 +264,13 @@ const DealChat = ({ conversationId, dealId, dealStatus, brandUserId, creatorUser
     setCounterOpen(true);
   }, []);
 
-  // Build timeline from messages
-  const timeline = (messages || []).map((m) => ({
-    ...m,
-    _type: m.message_type === "system_event" ? "system" as const : m.message_type === "offer" ? "offer_msg" as const : "text" as const,
-    _time: m.created_at,
-  })).sort((a, b) => new Date(a._time).getTime() - new Date(b._time).getTime());
+  // Build merged timeline — filter out offer-type messages since offers render as OfferCards
+  const timeline = [
+    ...(messages || [])
+      .filter((m) => m.message_type !== "offer")
+      .map((m) => ({ _kind: "message" as const, _time: m.created_at, message: m })),
+    ...(offers || []).map((o) => ({ _kind: "offer" as const, _time: o.created_at, offer: o })),
+  ].sort((a, b) => new Date(a._time).getTime() - new Date(b._time).getTime());
 
   if (messagesLoading || offersLoading) {
     return (
@@ -290,39 +291,41 @@ const DealChat = ({ conversationId, dealId, dealStatus, brandUserId, creatorUser
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto py-4 space-y-2 px-2">
-        {/* Render offer cards */}
-        {offers?.map((offer) => (
-          <OfferCard
-            key={offer.id}
-            rate={Number(offer.rate || (offer.hourly_rate * offer.hours))}
-            deliverables={offer.deliverables ?? undefined}
-            liveDate={offer.live_date ?? undefined}
-            usageRights={offer.usage_rights ?? undefined}
-            note={offer.note ?? undefined}
-            status={offer.status}
-            isOwn={offer.sender_id === user?.id}
-            senderName={offer.sender_id === brandUserId ? brandName : creatorName}
-            onAccept={() => handleAccept(offer.id)}
-            onCounter={() => handleCounter(offer)}
-            isPending={acceptMutation.isPending || counterMutation.isPending}
-          />
-        ))}
-
         {timeline.map((item) => {
-          if (item._type === "system") {
-            const meta = item.metadata as Record<string, string> | null;
-            return <SystemEventCard key={item.id} content={item.content} eventType={meta?.event_type} timestamp={item.created_at} />;
+          if (item._kind === "offer") {
+            const offer = item.offer;
+            return (
+              <OfferCard
+                key={`offer-${offer.id}`}
+                rate={Number(offer.rate || ((offer.hourly_rate ?? 0) * (offer.hours ?? 0)))}
+                deliverables={offer.deliverables ?? undefined}
+                liveDate={offer.live_date ?? undefined}
+                usageRights={offer.usage_rights ?? undefined}
+                note={offer.note ?? undefined}
+                status={offer.status}
+                isOwn={offer.sender_id === user?.id}
+                senderName={offer.sender_id === brandUserId ? brandName : creatorName}
+                onAccept={() => handleAccept(offer.id)}
+                onCounter={() => handleCounter(offer)}
+                isPending={acceptMutation.isPending || counterMutation.isPending}
+              />
+            );
           }
-          const isOwn = item.sender_id === user?.id;
+          const msg = item.message;
+          if (msg.message_type === "system_event") {
+            const meta = msg.metadata as Record<string, string> | null;
+            return <SystemEventCard key={msg.id} content={msg.content} eventType={meta?.event_type} timestamp={msg.created_at} />;
+          }
+          const isOwn = msg.sender_id === user?.id;
           return (
-            <div key={item.id} className={cn("flex", isOwn ? "justify-end" : "justify-start")}>
+            <div key={msg.id} className={cn("flex", isOwn ? "justify-end" : "justify-start")}>
               <div className={cn(
                 "max-w-[75%] rounded-2xl px-4 py-2.5 text-sm",
                 isOwn ? "bg-primary text-primary-foreground rounded-br-md" : "bg-secondary text-foreground rounded-bl-md"
               )}>
-                <p>{item.content}</p>
+                <p>{msg.content}</p>
                 <p className={cn("text-[10px] mt-1", isOwn ? "text-primary-foreground/60" : "text-muted-foreground")}>
-                  {format(new Date(item.created_at), "h:mm a")}
+                  {format(new Date(msg.created_at), "h:mm a")}
                 </p>
               </div>
             </div>

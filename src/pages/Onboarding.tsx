@@ -45,7 +45,7 @@ const CreatorOnboarding = () => {
         location,
       });
       if (error) throw error;
-      navigate("/feed");
+      navigate("/dashboard");
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
@@ -136,7 +136,7 @@ const BrandOnboarding = () => {
         industry,
       });
       if (error) throw error;
-      navigate("/feed");
+      navigate("/dashboard");
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
@@ -172,7 +172,7 @@ const Onboarding = () => {
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
-          <Link to="/" className="mb-2 text-xl font-bold text-foreground hover:text-primary transition-colors">GMB.live</Link>
+          <Link to="/" className="mb-2 text-xl font-bold text-foreground hover:text-primary transition-colors">GMV.live</Link>
           <CardTitle className="text-2xl">Complete Your Profile</CardTitle>
           <CardDescription>
             {role === "creator" ? "Tell brands what makes you great" : "Set up your brand profile"}

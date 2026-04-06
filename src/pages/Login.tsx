@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -20,16 +20,22 @@ const Login = () => {
   const [devMode, setDevMode] = useState(false);
   const [devPassword, setDevPassword] = useState("");
   const [devUnlocked, setDevUnlocked] = useState(false);
-  const { signIn } = useAuth();
+  const { user, loading, onboardingCompleted, signIn } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate(onboardingCompleted ? "/dashboard" : "/onboarding/role", { replace: true });
+    }
+  }, [user, loading, onboardingCompleted, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
       await signIn(email, password);
-      navigate("/feed");
+      navigate("/dashboard");
     } catch (err: any) {
       toast({ title: "Login failed", description: err.message, variant: "destructive" });
     } finally {
@@ -42,7 +48,7 @@ const Login = () => {
     setSubmitting(true);
     try {
       await signIn(account.email, account.password);
-      navigate("/feed");
+      navigate("/dashboard");
     } catch (err: any) {
       toast({ title: "Demo login failed", description: err.message, variant: "destructive" });
     } finally {
@@ -63,7 +69,7 @@ const Login = () => {
       <div className="w-full max-w-md space-y-4">
         <Card>
           <CardHeader className="text-center">
-            <Link to="/" className="mb-2 text-xl font-bold text-foreground hover:text-primary transition-colors">GMB.live</Link>
+            <Link to="/" className="mb-2 text-xl font-bold text-foreground hover:text-primary transition-colors">GMV.live</Link>
             <CardTitle className="text-2xl">Welcome back</CardTitle>
             <CardDescription>Sign in to your account</CardDescription>
           </CardHeader>

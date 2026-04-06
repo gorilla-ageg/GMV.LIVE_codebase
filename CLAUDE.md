@@ -1,67 +1,158 @@
-# GMB.live
+# GMV.live — Claude Code Master Instructions
 
-A creator/brand marketplace connecting brands with live-shopping hosts. Brands post products, creators apply, and deals are negotiated end-to-end with chat, contracts, escrow, shipment tracking, and analytics.
+## What This Product Is
+GMV.live is a two-sided marketplace connecting **brands** with **live stream creators** (starting with college students). The platform handles the entire deal lifecycle: brand posts product → creator discovers/gets approached → chat → offer negotiation → contract generation → e-signing → product shipment + tracking → live stream → performance analytics → payment release.
+
+## Branding
+- Product name: **GMV.live** (NOT GMB.live — fix any occurrence of GMB)
+- Primary color: hsl(349, 98%, 56%) — red/pink
+- Accent color: hsl(174, 91%, 55%) — teal
+- Dark theme only. Background: near-black (#080808)
 
 ## Tech Stack
-- React 18 + TypeScript
-- Vite (build tool)
-- Tailwind CSS + shadcn/ui (styling & components)
-- Supabase (backend/auth/realtime database)
-- React Router v6 (routing)
-- TanStack React Query v5 (data fetching)
-- Vitest (testing)
+- React 18 + TypeScript + Vite
+- Tailwind CSS + shadcn/ui
+- Supabase (auth, database, realtime, storage)
+- React Router v6
+- TanStack React Query v5
+- Stream Chat (stream-chat-react) for deal room messaging
+- Stripe Connect for payments and creator payouts
+- pdf-lib for contract PDF generation
 
-## Commands
-- `npm run dev` — start dev server (port 8080)
-- `npm run build` — production build
-- `npm run lint` — run ESLint
-- `npm run test` — run tests
-- `npm run test:watch` — run tests in watch mode
+## Coding Standards
+- Always use TypeScript with strict types — no `any`
+- All Supabase queries must handle errors explicitly
+- All components must be under 200 lines — split if larger
+- Use React Query for all data fetching — no raw useEffect for data
+- Never expose STRIPE_SECRET_KEY or STREAM_API_SECRET client-side
+- Secret operations go in Supabase Edge Functions
 
-## Branch Conventions
-- `main` — production branch (auto-deploys to Vercel at gmb.live)
-- `dev` — staging/integration branch
-- `feat/description` — feature branches (branch from `dev`)
-- `fix/description` — bug fix branches (branch from `dev` or `main`)
-
-## Workflow
-1. Create a feature or fix branch from `dev`
-2. Make changes and test locally
-3. Open a PR to merge into `dev`
-4. After validation, merge `dev` → `main` to deploy
-
-## Project Structure
-- `src/pages/` — page-level components (one per route)
-- `src/components/` — shared UI components (shadcn/ui based)
-- `src/components/deals/` — deal room tabs: chat, contract, shipment, analytics
+## Current Directory Structure
+- `src/pages/` — one file per route
+- `src/components/deals/` — deal room tabs
 - `src/components/feeds/` — brand and creator feed views
-- `src/components/onboarding/` — onboarding flow components
-- `src/contexts/AuthContext.tsx` — auth state and user role management
-- `src/integrations/supabase/` — Supabase client and generated types
-- `supabase/migrations/` — all database migrations in order
+- `src/components/chat/` — Stream Chat wrappers (to be built)
+- `src/contexts/AuthContext.tsx` — auth + role state
+- `src/integrations/supabase/` — client + generated types
+- `supabase/functions/` — edge functions (Stripe, Stream token)
 
-## Environment
-- Copy `.env.example` to `.env` and fill in your Supabase project URL and anon key
-- Never commit `.env` — it is in `.gitignore`
+## Database (Supabase — DO NOT change existing schema)
+Core tables: profiles, user_roles, creator_profiles, brand_profiles, products, conversations, messages, deals, deal_offers, deal_signatures, escrow_payments, shipments
+All tables have RLS enabled. Use `has_role(user_id, role)` security definer function for role checks.
 
-## Supabase
-- Auth: email/password only (Google OAuth removed)
-- Realtime: enabled for `messages`, `deals`, `deal_offers` tables
-- RLS: enabled on all tables with policies scoped to deal participants
-- Run migrations in order when setting up a fresh project: `supabase db push`
-- Update `supabase/config.toml` with your own project ID
+## Active Build Tasks (work through these in order)
 
-## Deployment
-- Deployed on Vercel — `vercel.json` configures SPA routing
-- Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` as environment variables in Vercel project settings
-- Pushes to `main` trigger automatic deploys
+### TASK 1 — Global rename GMB → GMV
+Find and replace every instance of "GMB.live", "GMB", "gmb" across all src/ files. Replace with "GMV.live", "GMV", "gmv" respectively. Do not touch node_modules or .git.
 
-## Key Features
-- **Auth**: email sign-up / log-in with Supabase Auth
-- **Roles**: brand or creator, selected during onboarding
-- **Feed**: role-specific feed (brands see creators, creators see products)
-- **Deal flow**: brand sends offer → negotiation via chat → contract signing → escrow → shipment → analytics
-- **Deal chat**: realtime messaging with offer cards, counter-offer modal, system events
-- **Contract**: e-signature by both parties, auto-generates when offer accepted
-- **Shipment tracker**: brand enters tracking info, creator confirms delivery
-- **Analytics tab**: creator submits GMV/viewers/orders; brand approves
+### TASK 2 — Authenticated App UX Redesign
+The logged-in experience is cluttered and outdated. Redesign the post-auth UI with these principles:
+- Clean sidebar navigation (collapsed by default on mobile)
+- Generous whitespace — cards should breathe
+- Consistent use of the design tokens in index.css
+- Role-aware: brand dashboard ≠ creator dashboard
+- Every page should have a clear primary action
+
+**Brand Dashboard should show:**
+- Top: key metrics (active deals, total GMV generated, pending shipments)
+- Main: product listings with deal status badges
+- Quick action: "Post New Product" button always visible
+- Side: recent deal activity feed
+
+**Creator Dashboard should show:**
+- Top: earnings summary, upcoming streams, deal pipeline
+- Main: available brand products to apply for
+- My Deals: active deals with status timeline
+- Quick action: "Update My Profile" always accessible
+
+### TASK 3 — Replace DealChat with Stream Chat
+- Remove the existing Supabase-polling chat in `src/components/deals/DealChat.tsx`
+- Replace with Stream Chat using `stream-chat-react` Channel component
+- Stream Chat channel ID format: `deal-{dealId}`
+- Get user token from Supabase Edge Function: `supabase/functions/stream-token/index.ts`
+- Keep the offer cards, system events, and OfferModal — just replace the message transport
+- Style Stream Chat to match the dark theme using Stream Chat's CSS override system
+
+Edge function for Stream token (`supabase/functions/stream-token/index.ts`):
+```typescript
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { StreamChat } from 'npm:stream-chat'
+
+serve(async (req) => {
+  const { userId, userName } = await req.json()
+  const client = StreamChat.getInstance(
+    Deno.env.get('STREAM_API_KEY')!,
+    Deno.env.get('STREAM_API_SECRET')!
+  )
+  const token = client.createToken(userId)
+  return new Response(JSON.stringify({ token }), {
+    headers: { 'Content-Type': 'application/json' }
+  })
+})
+```
+
+### TASK 4 — Stripe Connect Integration
+- Brands pay into escrow when a deal offer is accepted
+- Creators receive payout when analytics are approved
+- Use Stripe Connect Express for creator onboarding
+
+Edge function: `supabase/functions/stripe-payment/index.ts`
+- Create PaymentIntent when deal moves to `contract_signed` status
+- Store `stripe_payment_intent_id` in `escrow_payments` table
+- Webhook handler: on `payment_intent.succeeded` → update escrow status
+
+Edge function: `supabase/functions/stripe-connect/index.ts`
+- Create Stripe Express account for creator
+- Return onboarding link
+- Store `stripe_account_id` in `creator_profiles` table
+
+### TASK 5 — Contract PDF Generation
+- When both parties sign (`deal_signatures` has 2 rows for a deal), generate PDF
+- Use `pdf-lib` to create a professional contract document
+- Include: party names, product details, rate, deliverables, live date, usage rights
+- Upload to Supabase Storage bucket `contracts`
+- Store URL in `deals.contract_url`
+- Add download button in `ContractView.tsx`
+
+### TASK 6 — Shipment Tracking Polish
+- `ShipmentTracker.tsx` currently is manual input only
+- Add tracking number validation (basic format check)
+- Add carrier detection from tracking number format
+- Add a "Copy tracking link" button
+- Status timeline should auto-advance based on `shipments.status` field updates
+
+## Design Principles for All New UI
+- **No tables** — use cards with clear hierarchy instead
+- **Progressive disclosure** — show summary first, details on expand/click
+- **Status is always visible** — deal status, shipment status, payment status shown with colored badges
+- **Empty states** — every list/feed needs a helpful empty state with a clear CTA
+- **Loading states** — every async operation needs a skeleton or spinner
+- **Mobile first** — all layouts must work on 375px width
+
+## What NOT to Touch
+- `src/pages/Index.tsx` (brand landing page) — preserve exactly
+- `src/pages/ForCreators.tsx` (creator landing page) — preserve exactly
+- `src/index.css` (CSS variables and cloud-blob utility) — preserve exactly
+- `tailwind.config.ts` — preserve exactly
+- `supabase/migrations/` — never modify migration files
+- `docs/ALL_MIGRATIONS.sql` — never modify
+
+## Environment Variables
+Client-side (VITE_ prefix):
+- VITE_SUPABASE_URL
+- VITE_SUPABASE_PUBLISHABLE_KEY
+- VITE_STREAM_API_KEY
+- VITE_STRIPE_PUBLISHABLE_KEY
+
+Server-side (Supabase Edge Functions only — never in client code):
+- STREAM_API_SECRET
+- STRIPE_SECRET_KEY
+- STRIPE_WEBHOOK_SECRET
+
+## Running the Project
+```bash
+npm run dev        # dev server on port 8080
+npm run build      # production build
+npm run lint       # ESLint
+npm run test       # Vitest
+```

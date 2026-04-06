@@ -38,7 +38,8 @@ const OfferModal = ({ open, onClose, onSubmit, isPending, defaultValues, title =
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!rate || !deliverables) return;
+    const parsed = parseFloat(rate);
+    if (!rate || !deliverables || isNaN(parsed) || parsed <= 0) return;
     onSubmit({
       rate: parseFloat(rate),
       deliverables,

@@ -23,7 +23,7 @@ const Auth = () => {
   // Redirect authenticated users to the appropriate page
   useEffect(() => {
     if (!loading && user) {
-      navigate(onboardingCompleted ? "/feed" : "/onboarding/role", { replace: true });
+      navigate(onboardingCompleted ? "/dashboard" : "/onboarding/role", { replace: true });
     }
   }, [user, loading, onboardingCompleted, navigate]);
 
@@ -78,11 +78,11 @@ const Auth = () => {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
-      <Link to="/" className="mb-8 text-2xl font-bold text-foreground">GMB.live</Link>
+      <Link to="/" className="mb-8 text-2xl font-bold text-foreground">GMV.live</Link>
 
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Welcome to GMB.live</CardTitle>
+          <CardTitle className="text-2xl">Welcome to GMV.live</CardTitle>
           <CardDescription>Connect brands with live-shopping hosts</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

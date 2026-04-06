@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { StreamChatProvider } from "@/contexts/StreamChatContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -14,8 +15,9 @@ import Auth from "./pages/Auth";
 import OnboardingRole from "./pages/OnboardingRole";
 import OnboardingBrand from "./pages/OnboardingBrand";
 import OnboardingCreator from "./pages/OnboardingCreator";
-import Onboarding from "./pages/Onboarding";
+
 import Feed from "./pages/Feed";
+import Dashboard from "./pages/Dashboard";
 import ProductDetail from "./pages/ProductDetail";
 import CreatorDetail from "./pages/CreatorDetail";
 import MyProducts from "./pages/MyProducts";
@@ -31,6 +33,8 @@ import Blog from "./pages/Blog";
 import DealInbox from "./pages/DealInbox";
 import DealRoom from "./pages/DealRoom";
 import EditProduct from "./pages/EditProduct";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminRoute from "./components/AdminRoute";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +46,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
+            <StreamChatProvider>
             <ScrollToTop />
             <Routes>
               <Route path="/" element={<ForCreators />} />
@@ -54,10 +59,12 @@ const App = () => (
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/coming-soon" element={<ComingSoon />} />
-              <Route path="/onboarding/role" element={<OnboardingRole />} />
-              <Route path="/onboarding/brand" element={<OnboardingBrand />} />
-              <Route path="/onboarding/creator" element={<OnboardingCreator />} />
-              <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+              <Route path="/onboarding/role" element={<ProtectedRoute><OnboardingRole /></ProtectedRoute>} />
+              <Route path="/onboarding/brand" element={<ProtectedRoute><OnboardingBrand /></ProtectedRoute>} />
+              <Route path="/onboarding/creator" element={<ProtectedRoute><OnboardingCreator /></ProtectedRoute>} />
+              <Route path="/onboarding" element={<Navigate to="/onboarding/role" replace />} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/browse" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
               <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
               <Route path="/products/:id" element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
               <Route path="/creators/:id" element={<ProtectedRoute><CreatorDetail /></ProtectedRoute>} />
@@ -71,8 +78,11 @@ const App = () => (
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/settings" element={<Navigate to="/settings/profile" replace />} />
               <Route path="/settings/profile" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/settings/payment" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </StreamChatProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

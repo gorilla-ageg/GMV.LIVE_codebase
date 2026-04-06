@@ -34,6 +34,7 @@ const ShipmentTracker = ({ dealId, conversationId, isBrand }: ShipmentTrackerPro
   const queryClient = useQueryClient();
   const [trackingNumber, setTrackingNumber] = useState("");
   const [carrier, setCarrier] = useState("");
+  const [receiptConfirmed, setReceiptConfirmed] = useState(false);
 
   const { data: shipment, isLoading, error } = useQuery({
     queryKey: ["shipment", dealId],
@@ -143,6 +144,7 @@ const ShipmentTracker = ({ dealId, conversationId, isBrand }: ShipmentTrackerPro
       if (msgErr) throw msgErr;
     },
     onSuccess: () => {
+      setReceiptConfirmed(true);
       queryClient.invalidateQueries({ queryKey: ["deal", dealId] });
       queryClient.invalidateQueries({ queryKey: ["deal-messages", conversationId] });
       toast({ title: "Receipt confirmed!" });
@@ -293,7 +295,7 @@ const ShipmentTracker = ({ dealId, conversationId, isBrand }: ShipmentTrackerPro
       )}
 
       {/* Creator confirms receipt after delivery */}
-      {!isBrand && shipment.status === "delivered" && (
+      {!isBrand && shipment.status === "delivered" && !receiptConfirmed && (
         <Button
           onClick={() => confirmReceiptMutation.mutate()}
           disabled={confirmReceiptMutation.isPending}

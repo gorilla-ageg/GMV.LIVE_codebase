@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -11,8 +12,27 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Shield, Bell, Loader2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { User, Shield, Bell, CreditCard, Lock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const PAYMENT_METHODS = ["Venmo", "PayPal", "Zelle", "CashApp", "Wire", "Other"] as const;
+type PaymentMethod = typeof PAYMENT_METHODS[number];
+
+const PAYMENT_PLACEHOLDERS: Record<PaymentMethod, string> = {
+  Venmo: "@your-username",
+  PayPal: "your@email.com",
+  Zelle: "Phone number or email linked to Zelle",
+  CashApp: "$your-cashtag",
+  Wire: "Your bank name (we'll coordinate directly)",
+  Other: "How should the brand send money?",
+};
 
 const INDUSTRY_OPTIONS = [
   "Beauty", "Fashion", "Food & Beverage", "Tech", "Sports", "Home",
@@ -25,12 +45,22 @@ const NICHE_OPTIONS = [
 const PLATFORM_OPTIONS = ["TikTok", "Instagram", "YouTube"];
 const AUDIENCE_OPTIONS = ["Gen Z", "Millennials", "Parents", "Professionals", "Mixed"];
 
-type Section = "profile" | "account" | "notifications";
+type Section = "profile" | "account" | "notifications" | "payment";
 
 const Settings = () => {
   const { user, role } = useAuth();
   const { toast } = useToast();
-  const [section, setSection] = useState<Section>("profile");
+
+  const location = useLocation();
+  const [section, setSection] = useState<Section>(
+    location.pathname.includes("/payment") ? "payment" : "profile"
+  );
+
+  // Keep section in sync with URL changes
+  useEffect(() => {
+    if (location.pathname.includes("/payment")) setSection("payment");
+    else if (location.pathname.includes("/profile")) setSection("profile");
+  }, [location.pathname]);
   const [saving, setSaving] = useState(false);
 
   // Common
@@ -49,6 +79,12 @@ const Settings = () => {
   const [facebookHandle, setFacebookHandle] = useState("");
   const [audience, setAudience] = useState<string[]>([]);
 
+  // Creator — payment
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">("");
+  const [paymentHandle, setPaymentHandle] = useState("");
+  const [editingPayment, setEditingPayment] = useState(false);
+  const [savingPayment, setSavingPayment] = useState(false);
+
   // Brand
   const [brandName, setBrandName] = useState("");
   const [website, setWebsite] = useState("");
@@ -60,14 +96,18 @@ const Settings = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      const { data: profile, error: profileError } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      if (profileError) {
+        console.error("Failed to load profile:", profileError);
+      }
       if (profile) {
         setDisplayName(profile.display_name || "");
         setBio(profile.bio || "");
         if (profile.avatar_url) setAvatarPreview(profile.avatar_url);
       }
       if (role === "creator") {
-        const { data: cp } = await supabase.from("creator_profiles").select("*").eq("user_id", user.id).single();
+        const { data: cp, error: cpError } = await supabase.from("creator_profiles").select("*").eq("user_id", user.id).maybeSingle();
+        if (cpError) console.error("Failed to load creator profile:", cpError);
         if (cp) {
           setPlatforms(cp.platforms || []);
           setNiches(cp.niches || []);
@@ -77,10 +117,13 @@ const Settings = () => {
           setTwitterHandle((cp as any).twitter_handle || "");
           setFacebookHandle((cp as any).facebook_handle || "");
           setAudience((cp as any).audience_type ? [(cp as any).audience_type] : []);
+          if (cp.payment_method) setPaymentMethod(cp.payment_method as PaymentMethod);
+          if (cp.payment_handle) setPaymentHandle(cp.payment_handle);
         }
       }
       if (role === "brand") {
-        const { data: bp } = await supabase.from("brand_profiles").select("*").eq("user_id", user.id).single();
+        const { data: bp, error: bpError } = await supabase.from("brand_profiles").select("*").eq("user_id", user.id).maybeSingle();
+        if (bpError) console.error("Failed to load brand profile:", bpError);
         if (bp) {
           setBrandName(bp.company_name || "");
           setWebsite(bp.website || "");
@@ -110,10 +153,11 @@ const Settings = () => {
       if (avatarFile) {
         avatarUrl = await uploadImage(avatarFile, "avatars", `${user.id}/avatar`);
       }
-      await supabase.from("profiles").update({ display_name: displayName, bio, avatar_url: avatarUrl }).eq("id", user.id);
+      const { error: profileUpdateError } = await supabase.from("profiles").update({ display_name: displayName, bio, avatar_url: avatarUrl }).eq("id", user.id);
+      if (profileUpdateError) throw profileUpdateError;
 
       if (role === "creator") {
-        await supabase.from("creator_profiles").update({
+        const { error: creatorUpdateError } = await supabase.from("creator_profiles").update({
           platforms, niches,
           tiktok_handle: tiktokHandle || null,
           instagram_handle: instagramHandle || null,
@@ -122,6 +166,7 @@ const Settings = () => {
           facebook_handle: facebookHandle || null,
           audience_type: audience[0] || null,
         } as any).eq("user_id", user.id);
+        if (creatorUpdateError) throw creatorUpdateError;
       }
 
       if (role === "brand") {
@@ -139,10 +184,11 @@ const Settings = () => {
             uploadedCampaign.push(item.previewUrl);
           }
         }
-        await supabase.from("brand_profiles").update({
+        const { error: brandUpdateError } = await supabase.from("brand_profiles").update({
           company_name: brandName, website: website || null, logo_url: logoUrl,
           industries: industries as any, campaign_images: uploadedCampaign as any,
         }).eq("user_id", user.id);
+        if (brandUpdateError) throw brandUpdateError;
       }
 
       toast({ title: "Profile updated", description: "Your changes have been saved." });
@@ -153,8 +199,39 @@ const Settings = () => {
     }
   };
 
-  const sidebarItems: { key: Section; label: string; icon: React.ReactNode }[] = [
+  const handleSavePayment = async () => {
+    if (!user || !paymentMethod || !paymentHandle.trim()) {
+      toast({ title: "Both fields are required", variant: "destructive" });
+      return;
+    }
+    setSavingPayment(true);
+    try {
+      const { error } = await supabase
+        .from("creator_profiles")
+        .update({
+          payment_method: paymentMethod,
+          payment_handle: paymentHandle.trim(),
+        } as Record<string, unknown>)
+        .eq("user_id", user.id);
+      if (error) throw error;
+      setEditingPayment(false);
+      toast({ title: "Payment info updated" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Something went wrong";
+      toast({ title: "Error", description: message, variant: "destructive" });
+    } finally {
+      setSavingPayment(false);
+    }
+  };
+
+  const maskHandle = (handle: string): string => {
+    if (!handle || handle.length <= 4) return handle;
+    return handle.slice(0, handle.length > 6 ? 4 : 3) + "****";
+  };
+
+  const sidebarItems: { key: Section; label: string; icon: React.ReactNode; creatorOnly?: boolean }[] = [
     { key: "profile", label: "Profile Info", icon: <User className="h-4 w-4" /> },
+    { key: "payment", label: "Payment", icon: <CreditCard className="h-4 w-4" />, creatorOnly: true },
     { key: "account", label: "Account & Security", icon: <Shield className="h-4 w-4" /> },
     { key: "notifications", label: "Notifications", icon: <Bell className="h-4 w-4" /> },
   ];
@@ -165,7 +242,7 @@ const Settings = () => {
         {/* Sidebar */}
         <div className="w-full shrink-0 md:w-56">
           <nav className="flex flex-row gap-1 md:flex-col">
-            {sidebarItems.map((item) => (
+            {sidebarItems.filter((item) => !item.creatorOnly || role === "creator").map((item) => (
               <button
                 key={item.key}
                 onClick={() => setSection(item.key)}
@@ -287,6 +364,85 @@ const Settings = () => {
                     {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Changes"}
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {section === "payment" && role === "creator" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Info</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {!editingPayment && paymentMethod && paymentHandle ? (
+                  <div className="space-y-4">
+                    <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Method</span>
+                        <span className="text-sm font-medium text-foreground">{paymentMethod}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Handle</span>
+                        <span className="text-sm font-medium text-foreground font-mono">
+                          {maskHandle(paymentHandle)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Lock className="h-4 w-4 shrink-0" />
+                      Only shared with brands after contract is signed
+                    </div>
+
+                    <Button variant="outline" onClick={() => setEditingPayment(true)}>
+                      Edit Payment Info
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Payment Method *</Label>
+                      <Select
+                        value={paymentMethod}
+                        onValueChange={(val) => setPaymentMethod(val as PaymentMethod)}
+                      >
+                        <SelectTrigger className="min-h-[44px]">
+                          <SelectValue placeholder="Select payment method" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PAYMENT_METHODS.map((method) => (
+                            <SelectItem key={method} value={method}>
+                              {method}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Handle / ID *</Label>
+                      <Input
+                        value={paymentHandle}
+                        onChange={(e) => setPaymentHandle(e.target.value)}
+                        placeholder={paymentMethod ? PAYMENT_PLACEHOLDERS[paymentMethod as PaymentMethod] : "Select a method first"}
+                        className="min-h-[44px]"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Lock className="h-4 w-4 shrink-0" />
+                      Only shared with brands after contract is signed
+                    </div>
+
+                    <Button
+                      onClick={handleSavePayment}
+                      disabled={savingPayment || !paymentMethod || !paymentHandle.trim()}
+                      className="w-full min-h-[44px]"
+                    >
+                      {savingPayment ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Payment Info"}
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}

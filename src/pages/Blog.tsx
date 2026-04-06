@@ -140,8 +140,8 @@ const Blog = () => {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-8 sm:grid-cols-3">
             <div>
-              <p className="text-base sm:text-lg font-bold text-foreground"><em>GMB.live</em></p>
-              <p className="mt-2 text-xs sm:text-sm text-muted-foreground">support@GMB.live</p>
+              <p className="text-base sm:text-lg font-bold text-foreground"><em>GMV.live</em></p>
+              <p className="mt-2 text-xs sm:text-sm text-muted-foreground">support@GMV.live</p>
             </div>
             <div className="space-y-2 text-sm text-muted-foreground">
               <Link to="/for-brands" className="block hover:text-foreground">For Brands</Link>
@@ -154,7 +154,7 @@ const Blog = () => {
             </div>
           </div>
           <p className="mt-8 text-xs text-muted-foreground">
-            © {new Date().getFullYear()} <em>GMB.live</em>. All rights reserved.
+            © {new Date().getFullYear()} <em>GMV.live</em>. All rights reserved.
           </p>
         </div>
       </footer>

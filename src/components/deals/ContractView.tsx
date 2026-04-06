@@ -102,9 +102,13 @@ const ContractView = ({ dealId, conversationId }: ContractViewProps) => {
         .eq("deal_id", dealId);
       if (contractErr) throw contractErr;
 
-      // Check if both have now signed
-      const existingSigs = signatures || [];
-      const otherSigned = existingSigs.some((s) => s.user_id !== user!.id);
+      // Re-fetch signatures to check if both have now signed (avoid race with stale cache)
+      const { data: freshSigs, error: sigsFetchErr } = await supabase
+        .from("deal_signatures")
+        .select("*")
+        .eq("deal_id", dealId);
+      if (sigsFetchErr) throw sigsFetchErr;
+      const otherSigned = (freshSigs || []).some((s) => s.user_id !== user!.id);
       if (otherSigned) {
         // Both signed - update deal status
         const { error: dealErr } = await supabase

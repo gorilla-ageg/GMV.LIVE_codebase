@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStreamChat } from "@/contexts/StreamChatContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -71,8 +72,26 @@ const CreatorDetail = () => {
     enabled: !!id,
   });
 
+  const { client: streamClient } = useStreamChat();
+
   const handleStartConversation = async () => {
     if (!user || !creator) return;
+
+    // Create a Stream Chat channel for direct messaging
+    const channelId = [user.id, creator.user_id].sort().join("-");
+
+    if (streamClient) {
+      try {
+        const channel = streamClient.channel("messaging", channelId, {
+          members: [user.id, creator.user_id],
+        });
+        await channel.create();
+      } catch (err) {
+        console.error("Failed to create Stream channel:", err);
+      }
+    }
+
+    // Also create Supabase conversation for deal tracking
     const { data: existing } = await supabase
       .from("conversations")
       .select("id")
@@ -80,22 +99,13 @@ const CreatorDetail = () => {
       .eq("creator_user_id", creator.user_id)
       .maybeSingle();
 
-    if (existing) {
-      navigate(`/messages/${existing.id}`);
-      return;
+    if (!existing) {
+      await supabase
+        .from("conversations")
+        .insert({ brand_user_id: user.id, creator_user_id: creator.user_id });
     }
 
-    const { data: convo, error } = await supabase
-      .from("conversations")
-      .insert({ brand_user_id: user.id, creator_user_id: creator.user_id })
-      .select()
-      .single();
-
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-      return;
-    }
-    navigate(`/messages/${convo.id}`);
+    navigate(`/messages/${channelId}`);
   };
 
   const sendOfferMutation = useMutation({

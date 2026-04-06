@@ -1,4 +1,4 @@
-// Realistic demo data for GMB.live — modeled after top TikTok Shop brands & creators
+// Realistic demo data for GMV.live — modeled after top TikTok Shop brands & creators
 // Images use local assets in /public to guarantee they always load
 
 export interface DemoProduct {
@@ -16,7 +16,12 @@ export interface DemoProduct {
   status: string;
   past_month_gmv: number | null;
   created_at: string;
-  profiles: {
+  public_profiles: {
+    display_name: string;
+    avatar_url: string;
+  };
+  /** @deprecated alias kept for backward compat */
+  profiles?: {
     display_name: string;
     avatar_url: string;
   };
@@ -39,7 +44,7 @@ export interface DemoCreator {
   instagram_handle: string;
   youtube_handle: string;
   product_interests: string[];
-  has_tiktok_affiliate: boolean;
+  has_tiktok_affiliate: string;
   created_at: string;
   public_profiles: {
     display_name: string;
@@ -65,7 +70,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
     status: "active",
     past_month_gmv: 48000,
     created_at: "2026-03-10T12:00:00Z",
-    profiles: {
+    public_profiles: {
       display_name: "Sephora",
       avatar_url: "/images/brands/sephora.png",
     },
@@ -86,7 +91,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
     status: "active",
     past_month_gmv: 32000,
     created_at: "2026-03-08T10:00:00Z",
-    profiles: {
+    public_profiles: {
       display_name: "Crocs",
       avatar_url: "/images/brands/crocs.png",
     },
@@ -107,7 +112,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
     status: "active",
     past_month_gmv: 75000,
     created_at: "2026-03-12T09:00:00Z",
-    profiles: {
+    public_profiles: {
       display_name: "Samsung",
       avatar_url: "/images/brands/samsung.png",
     },
@@ -128,7 +133,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
     status: "active",
     past_month_gmv: 62000,
     created_at: "2026-03-14T14:00:00Z",
-    profiles: {
+    public_profiles: {
       display_name: "Rhode",
       avatar_url: "/images/brands/rhode.png",
     },
@@ -149,7 +154,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
     status: "active",
     past_month_gmv: 55000,
     created_at: "2026-03-15T11:00:00Z",
-    profiles: {
+    public_profiles: {
       display_name: "Adidas",
       avatar_url: "/images/brands/adidas.png",
     },
@@ -174,7 +179,7 @@ export const DEMO_CREATORS: DemoCreator[] = [
     instagram_handle: "miachen.glow",
     youtube_handle: "",
     product_interests: ["Skincare", "Makeup", "Hair Care"],
-    has_tiktok_affiliate: true,
+    has_tiktok_affiliate: "yes",
     created_at: "2026-01-15T10:00:00Z",
     public_profiles: {
       display_name: "Mia Chen",
@@ -199,7 +204,7 @@ export const DEMO_CREATORS: DemoCreator[] = [
     instagram_handle: "jordanlee.reviews",
     youtube_handle: "JordanLeeTech",
     product_interests: ["Electronics", "Audio", "Smart Home"],
-    has_tiktok_affiliate: true,
+    has_tiktok_affiliate: "yes",
     created_at: "2026-02-01T12:00:00Z",
     public_profiles: {
       display_name: "Jordan Lee",
@@ -224,7 +229,7 @@ export const DEMO_CREATORS: DemoCreator[] = [
     instagram_handle: "aisha.patel",
     youtube_handle: "",
     product_interests: ["Clothing", "Footwear", "Accessories"],
-    has_tiktok_affiliate: true,
+    has_tiktok_affiliate: "yes",
     created_at: "2026-01-20T08:00:00Z",
     public_profiles: {
       display_name: "Aisha Patel",
@@ -249,7 +254,7 @@ export const DEMO_CREATORS: DemoCreator[] = [
     instagram_handle: "tyler.ross.fitness",
     youtube_handle: "TylerRossFit",
     product_interests: ["Sportswear", "Supplements", "Fitness Equipment"],
-    has_tiktok_affiliate: true,
+    has_tiktok_affiliate: "yes",
     created_at: "2026-02-10T14:00:00Z",
     public_profiles: {
       display_name: "Tyler Ross",
@@ -274,7 +279,7 @@ export const DEMO_CREATORS: DemoCreator[] = [
     instagram_handle: "sofia.cooks",
     youtube_handle: "",
     product_interests: ["Kitchen", "Home Decor", "Food & Beverage"],
-    has_tiktok_affiliate: true,
+    has_tiktok_affiliate: "yes",
     created_at: "2026-01-28T09:00:00Z",
     public_profiles: {
       display_name: "Sofia Martinez",

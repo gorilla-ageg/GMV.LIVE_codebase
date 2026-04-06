@@ -41,9 +41,22 @@ const BrandFeed = () => {
 
       const { data, error } = await q;
       if (error) throw error;
-      // Merge demo creators so the feed always has content
-      const demoMapped = DEMO_CREATORS.map((d) => ({ ...d }));
-      return [...(data || []), ...demoMapped];
+      // Only merge demo creators in development
+      if (import.meta.env.DEV) {
+        const demoMapped = DEMO_CREATORS
+          .filter((d) => {
+            if (!search) return true;
+            const s = search.toLowerCase();
+            return (
+              d.niches.some((n) => n.toLowerCase().includes(s)) ||
+              d.location.toLowerCase().includes(s) ||
+              d.public_profiles.display_name.toLowerCase().includes(s)
+            );
+          })
+          .map((d) => ({ ...d }));
+        return [...(data || []), ...demoMapped];
+      }
+      return data || [];
     },
   });
 
@@ -54,7 +67,9 @@ const BrandFeed = () => {
   const filtered = creators?.filter((c: any) => {
     if (selectedNiches.length > 0 && !c.niches?.some((n: string) => selectedNiches.includes(n))) return false;
     if (selectedPlatforms.length > 0 && !c.platforms?.some((p: string) => selectedPlatforms.includes(p))) return false;
-    if ((c.follower_count ?? 0) < followerRange[0] || (c.follower_count ?? 0) > followerRange[1]) return false;
+    const fc = c.follower_count ?? 0;
+    if (fc < followerRange[0]) return false;
+    if (followerRange[1] < 1000000 && fc > followerRange[1]) return false;
     return true;
   });
 

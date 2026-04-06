@@ -1,5 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 interface Props {
   children: React.ReactNode;
@@ -8,19 +9,30 @@ interface Props {
 
 const ProtectedRoute = ({ children, requiredRole }: Props) => {
   const { user, role, loading, onboardingCompleted, onboardingStep } = useAuth();
+  const location = useLocation();
 
+  // Never redirect while loading — show spinner until auth is fully resolved
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (!user) return <Navigate to="/auth" replace />;
 
-  if (!onboardingCompleted) {
-    // If user has started onboarding, redirect to the right step
+  // Admins skip onboarding entirely — go straight to /admin
+  if (role === "admin") {
+    if (location.pathname.startsWith("/onboarding")) {
+      return <Navigate to="/admin" replace />;
+    }
+    return <>{children}</>;
+  }
+
+  // If onboarding not done, redirect to the right onboarding step
+  // But don't redirect if we're already on an onboarding page
+  if (!onboardingCompleted && !location.pathname.startsWith("/onboarding")) {
     if (onboardingStep?.startsWith("creator")) {
       return <Navigate to="/onboarding/creator" replace />;
     }
@@ -30,7 +42,14 @@ const ProtectedRoute = ({ children, requiredRole }: Props) => {
     return <Navigate to="/onboarding/role" replace />;
   }
 
-  if (requiredRole && role !== requiredRole) return <Navigate to="/feed" replace />;
+  // Completed users should never land on onboarding
+  if (onboardingCompleted && location.pathname.startsWith("/onboarding")) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  if (requiredRole && role !== requiredRole && role !== "admin") {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return <>{children}</>;
 };

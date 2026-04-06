@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Upload, X, Pencil } from "lucide-react";
 
@@ -13,6 +13,14 @@ interface ImageUploaderProps {
 const ImageUploader = ({ value, onChange, circular = false, label, className }: ImageUploaderProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(value);
+
+  // Sync internal preview state when the value prop changes externally
+  // (e.g., when data loads from Supabase after mount)
+  useEffect(() => {
+    if (value && !preview) {
+      setPreview(value);
+    }
+  }, [value]);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

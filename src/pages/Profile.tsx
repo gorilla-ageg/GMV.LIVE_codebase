@@ -7,20 +7,21 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
-import { Settings, MapPin, Users, Star, TrendingUp, ExternalLink } from "lucide-react";
+import { Settings, MapPin, Users, Star, TrendingUp, ExternalLink, Loader2 } from "lucide-react";
 
 const Profile = () => {
   const { user, role } = useAuth();
   const navigate = useNavigate();
 
-  const { data: profile } = useQuery({
+  const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["my-profile"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user!.id)
         .single();
+      if (error) throw error;
       return data;
     },
     enabled: !!user,
@@ -29,7 +30,8 @@ const Profile = () => {
   const { data: creatorProfile } = useQuery({
     queryKey: ["my-creator-profile"],
     queryFn: async () => {
-      const { data } = await supabase.from("creator_profiles").select("*").eq("user_id", user!.id).single();
+      const { data, error } = await supabase.from("creator_profiles").select("*").eq("user_id", user!.id).maybeSingle();
+      if (error) throw error;
       return data;
     },
     enabled: !!user && role === "creator",
@@ -38,7 +40,8 @@ const Profile = () => {
   const { data: brandProfile } = useQuery({
     queryKey: ["my-brand-profile"],
     queryFn: async () => {
-      const { data } = await supabase.from("brand_profiles").select("*").eq("user_id", user!.id).single();
+      const { data, error } = await supabase.from("brand_profiles").select("*").eq("user_id", user!.id).maybeSingle();
+      if (error) throw error;
       return data;
     },
     enabled: !!user && role === "brand",
@@ -46,10 +49,21 @@ const Profile = () => {
 
   const initials = (profile?.display_name || "")
     .split(" ")
+    .filter((w: string) => w.length > 0)
     .map((w: string) => w[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
+
+  if (profileLoading) {
+    return (
+      <AppLayout>
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>

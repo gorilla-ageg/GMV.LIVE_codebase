@@ -2,11 +2,15 @@ import { cn } from "@/lib/utils";
 import { CheckCircle, FileText, DollarSign, Package, Video, AlertTriangle, Handshake } from "lucide-react";
 
 const iconMap: Record<string, React.ReactNode> = {
+  offer_sent: <DollarSign className="h-4 w-4 text-blue-400" />,
+  counter_offer: <DollarSign className="h-4 w-4 text-amber-400" />,
   deal_agreed: <Handshake className="h-4 w-4 text-emerald-400" />,
   contract_signed: <FileText className="h-4 w-4 text-indigo-400" />,
   contract_generated: <FileText className="h-4 w-4 text-blue-400" />,
   escrow_funded: <DollarSign className="h-4 w-4 text-emerald-400" />,
   escrow_released: <DollarSign className="h-4 w-4 text-green-400" />,
+  payment_sent: <DollarSign className="h-4 w-4 text-blue-400" />,
+  payment_confirmed: <CheckCircle className="h-4 w-4 text-green-400" />,
   product_shipped: <Package className="h-4 w-4 text-sky-400" />,
   product_delivered: <Package className="h-4 w-4 text-teal-400" />,
   product_received: <CheckCircle className="h-4 w-4 text-teal-400" />,

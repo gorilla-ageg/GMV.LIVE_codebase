@@ -83,7 +83,7 @@ const features = [
     icon: Shield,
     title: "Secure Payments",
     description:
-      "Funds are held in escrow until the stream is complete. Pay only for results, with full transparency.",
+      "Pay creators directly via Venmo, PayPal, or Zelle after signing your contract. Payment info is only shared after both parties sign.",
   },
 ];
 
@@ -121,8 +121,8 @@ const faqs = [
     a: "Use our filters to search by niche, platform, follower count, past GMV, and ratings. You can watch highlight reels and review portfolios before reaching out.",
   },
   {
-    q: "What does it cost to use GMB.live?",
-    a: "GMB.live charges a small platform fee on bookings. Host rates vary — you negotiate directly with hosts based on your budget and campaign needs.",
+    q: "What does it cost to use GMV.live?",
+    a: "GMV.live charges a small platform fee on bookings. Host rates vary — you negotiate directly with hosts based on your budget and campaign needs.",
   },
   {
     q: "Which platforms are supported?",
@@ -130,7 +130,7 @@ const faqs = [
   },
   {
     q: "How are payments handled?",
-    a: "Payments are held in escrow when you book. Funds are released to the host once the stream is completed and approved by you.",
+    a: "After both parties sign the contract, you pay the creator directly via their preferred method (Venmo, PayPal, Zelle, etc.). Payment details are only revealed after the contract is signed.",
   },
 ];
 
@@ -292,7 +292,7 @@ const Index = () => {
             How It Works
           </h2>
           <p className="mx-auto mt-3 sm:mt-4 max-w-xl text-center text-sm sm:text-base text-muted-foreground">
-            From discovery to conversion — here's how <em>GMB.live</em> works for brands.
+            From discovery to conversion — here's how <em>GMV.live</em> works for brands.
           </p>
 
           <div className="mt-10 sm:mt-14 space-y-8 sm:space-y-12">
@@ -342,7 +342,7 @@ const Index = () => {
             Start Selling Live Today
           </h2>
           <p className="mx-auto mt-3 sm:mt-4 max-w-xl text-sm sm:text-base text-muted-foreground">
-            Join hundreds of brands already using <em>GMB.live</em> to find top live shopping
+            Join hundreds of brands already using <em>GMV.live</em> to find top live shopping
             hosts, run campaigns, and drive real-time sales.
           </p>
           <div className="mt-8 sm:mt-10 flex flex-col items-center gap-3 sm:gap-4">
@@ -366,8 +366,8 @@ const Index = () => {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-8 sm:grid-cols-3">
             <div>
-              <p className="text-base sm:text-lg font-bold text-foreground"><em>GMB.live</em></p>
-              <p className="mt-2 text-xs sm:text-sm text-muted-foreground">support@GMB.live</p>
+              <p className="text-base sm:text-lg font-bold text-foreground"><em>GMV.live</em></p>
+              <p className="mt-2 text-xs sm:text-sm text-muted-foreground">support@GMV.live</p>
             </div>
             <div className="space-y-2 text-sm text-muted-foreground">
               <Link to="/for-brands" className="block hover:text-foreground">For Brands</Link>
@@ -380,7 +380,7 @@ const Index = () => {
             </div>
           </div>
           <p className="mt-8 text-xs text-muted-foreground">
-            © {new Date().getFullYear()} <em>GMB.live</em>. All rights reserved.
+            © {new Date().getFullYear()} <em>GMV.live</em>. All rights reserved.
           </p>
         </div>
       </footer>

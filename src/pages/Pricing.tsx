@@ -65,7 +65,7 @@ const Pricing = () => {
               </div>
               <h3 className="text-base sm:text-lg font-semibold text-card-foreground">Vetted College Hosts</h3>
               <p className="mt-2 text-xs sm:text-sm text-muted-foreground">
-                Every creator on GMB.live is a verified college student with live-shopping experience. No guesswork, no unreliable hosts.
+                Every creator on GMV.live is a verified college student with live-shopping experience. No guesswork, no unreliable hosts.
               </p>
             </div>
           </div>
@@ -76,7 +76,7 @@ const Pricing = () => {
       <section className="py-12 sm:py-16 lg:py-20 xl:py-24">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-center text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl mb-3 sm:mb-4">
-            GMB.live vs. The Rest
+            GMV.live vs. The Rest
           </h2>
           <p className="mx-auto mb-8 sm:mb-12 max-w-xl text-center text-sm sm:text-base text-muted-foreground">
             See how we stack up against agencies and other platforms.
@@ -88,7 +88,7 @@ const Pricing = () => {
                 <thead>
                   <tr className="border-b border-border">
                     <th className="p-3 sm:p-4 text-left font-medium text-muted-foreground">Feature</th>
-                    <th className="p-3 sm:p-4 text-center font-semibold text-primary">GMB.live</th>
+                    <th className="p-3 sm:p-4 text-center font-semibold text-primary">GMV.live</th>
                     <th className="p-3 sm:p-4 text-center font-medium text-muted-foreground">Agencies</th>
                   </tr>
                 </thead>
@@ -145,8 +145,8 @@ const Pricing = () => {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-8 sm:grid-cols-3">
             <div>
-              <p className="text-base sm:text-lg font-bold text-foreground"><em>GMB.live</em></p>
-              <p className="mt-2 text-xs sm:text-sm text-muted-foreground">support@GMB.live</p>
+              <p className="text-base sm:text-lg font-bold text-foreground"><em>GMV.live</em></p>
+              <p className="mt-2 text-xs sm:text-sm text-muted-foreground">support@GMV.live</p>
             </div>
             <div className="space-y-2 text-sm text-muted-foreground">
               <Link to="/for-brands" className="block hover:text-foreground">For Brands</Link>
@@ -159,7 +159,7 @@ const Pricing = () => {
             </div>
           </div>
           <p className="mt-8 text-xs text-muted-foreground">
-            © {new Date().getFullYear()} <em>GMB.live</em>. All rights reserved.
+            © {new Date().getFullYear()} <em>GMV.live</em>. All rights reserved.
           </p>
         </div>
       </footer>

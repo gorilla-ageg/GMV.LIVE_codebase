@@ -26,19 +26,20 @@ const getCta = (status: string, isBrand: boolean): { label: string; icon: React.
         ? { label: "Send Offer", icon: <Send className="h-4 w-4" /> }
         : { label: "Counter Offer", icon: <Send className="h-4 w-4" /> };
     case "agreed":
+      return { label: "Review Contract", icon: <DollarSign className="h-4 w-4" /> };
     case "signed":
       return isBrand
-        ? { label: "Sign & Fund Escrow", icon: <DollarSign className="h-4 w-4" /> }
+        ? { label: "Sign Contract", icon: <DollarSign className="h-4 w-4" /> }
         : { label: "Sign Contract", icon: <DollarSign className="h-4 w-4" /> };
     case "contracted":
       return isBrand
-        ? { label: "Fund Escrow", icon: <DollarSign className="h-4 w-4" /> }
+        ? { label: "Send Payment", icon: <DollarSign className="h-4 w-4" /> }
         : { label: "Awaiting payment...", icon: <Loader2 className="h-4 w-4 animate-spin" />, disabled: true };
     case "escrow_funded":
     case "funded":
       return isBrand
         ? { label: "Ship Product", icon: <Package className="h-4 w-4" /> }
-        : { label: "Awaiting product...", icon: <Loader2 className="h-4 w-4 animate-spin" />, disabled: true };
+        : { label: "Awaiting shipment...", icon: <Loader2 className="h-4 w-4 animate-spin" />, disabled: true };
     case "shipped":
       return isBrand
         ? { label: "View Tracking", icon: <Package className="h-4 w-4" /> }

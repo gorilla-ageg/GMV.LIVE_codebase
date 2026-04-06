@@ -23,7 +23,7 @@ const Navbar = () => {
           className="text-xl font-bold tracking-tight text-foreground"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          GMB.live
+          GMV.live
         </Link>
 
         <div className="hidden items-center gap-8 md:flex">
@@ -41,7 +41,7 @@ const Navbar = () => {
         <div className="hidden items-center gap-3 md:flex">
           {user ? (
             <Button size="sm" className="rounded-full" asChild>
-              <Link to="/feed">Go to Dashboard</Link>
+              <Link to="/dashboard">Go to Dashboard</Link>
             </Button>
           ) : (
             <Button size="sm" className="rounded-full" asChild>

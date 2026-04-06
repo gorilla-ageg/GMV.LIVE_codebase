@@ -25,7 +25,7 @@ const CreatorFeed = () => {
     queryFn: async () => {
       let q = supabase
         .from("products")
-        .select("*, profiles!products_brand_profile_fkey(display_name, avatar_url)")
+        .select("*, public_profiles!products_brand_profile_fkey(display_name, avatar_url)")
         .eq("status", "active")
         .order("created_at", { ascending: false });
 
@@ -35,9 +35,22 @@ const CreatorFeed = () => {
 
       const { data, error } = await q;
       if (error) throw error;
-      // Merge demo products so the feed always has content
-      const demoMapped = DEMO_PRODUCTS.map((d) => ({ ...d }));
-      return [...(data || []), ...demoMapped];
+      // Only merge demo products in development
+      if (import.meta.env.DEV) {
+        const demoMapped = DEMO_PRODUCTS
+          .filter((d) => {
+            if (!search) return true;
+            const s = search.toLowerCase();
+            return (
+              d.title.toLowerCase().includes(s) ||
+              d.category.toLowerCase().includes(s) ||
+              (d.description || "").toLowerCase().includes(s)
+            );
+          })
+          .map((d) => ({ ...d }));
+        return [...(data || []), ...demoMapped];
+      }
+      return data || [];
     },
   });
 
@@ -49,7 +62,8 @@ const CreatorFeed = () => {
     if (selectedCategories.length > 0 && !selectedCategories.includes(p.category)) return false;
     if (selectedPlatforms.length > 0 && !p.target_platforms?.some((tp: string) => selectedPlatforms.includes(tp))) return false;
     const min = p.budget_min ?? 0;
-    if (min < budgetRange[0] || min > budgetRange[1]) return false;
+    if (min < budgetRange[0]) return false;
+    if (budgetRange[1] < 5000 && min > budgetRange[1]) return false;
     return true;
   });
 
@@ -210,14 +224,14 @@ const CreatorFeed = () => {
                   {/* Brand avatar + product title */}
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
-                      <AvatarImage src={product.profiles?.avatar_url} />
+                      <AvatarImage src={product.public_profiles?.avatar_url} />
                       <AvatarFallback className="text-xs">
-                        {(product.profiles?.display_name || "B").slice(0, 2).toUpperCase()}
+                        {(product.public_profiles?.display_name || "B").slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
                       <h3 className="truncate text-base font-semibold text-foreground">{product.title}</h3>
-                      <p className="text-sm text-muted-foreground">by {product.profiles?.display_name || "Brand"}</p>
+                      <p className="text-sm text-muted-foreground">by {product.public_profiles?.display_name || "Brand"}</p>
                     </div>
                   </div>
 

@@ -12,11 +12,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Loader2, Sparkles, TrendingUp, Star, Crown,
-  CheckCircle2, HelpCircle,
+  CheckCircle2, HelpCircle, Lock,
 } from "lucide-react";
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 6;
+
+const PAYMENT_METHODS = ["Venmo", "PayPal", "Zelle", "CashApp", "Wire", "Other"] as const;
+type PaymentMethod = typeof PAYMENT_METHODS[number];
+
+const PAYMENT_PLACEHOLDERS: Record<PaymentMethod, string> = {
+  Venmo: "@your-username",
+  PayPal: "your@email.com",
+  Zelle: "Phone number or email linked to Zelle",
+  CashApp: "$your-cashtag",
+  Wire: "Your bank name (we'll coordinate directly)",
+  Other: "How should the brand send money?",
+};
 
 const INTEREST_OPTIONS = [
   "Beauty", "Fashion", "Tech", "Home & Kitchen",
@@ -33,7 +52,7 @@ const EXPERIENCE_LEVELS = [
 
 const AFFILIATE_OPTIONS = [
   { value: "yes", title: "Yes, I have one", description: "I'm already accepted into TikTok Shop", icon: CheckCircle2 },
-  { value: "need_one", title: "I need one", description: "I'd like GMB.live to help me get set up", icon: HelpCircle },
+  { value: "need_one", title: "I need one", description: "I'd like GMV.live to help me get set up", icon: HelpCircle },
 ] as const;
 
 const OnboardingCreator = () => {
@@ -65,7 +84,11 @@ const OnboardingCreator = () => {
   // Step 4
   const [affiliate, setAffiliate] = useState("");
 
-  // Step 5
+  // Step 5 — Payment
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">("");
+  const [paymentHandle, setPaymentHandle] = useState("");
+
+  // Step 6
   const [photos, setPhotos] = useState<{ file: File | null; previewUrl: string }[]>([]);
 
   // Load saved progress
@@ -95,6 +118,8 @@ const OnboardingCreator = () => {
         if ((cp as any).product_interests?.length) setInterests((cp as any).product_interests);
         if ((cp as any).experience_level) setExperience((cp as any).experience_level);
         if ((cp as any).has_tiktok_affiliate) setAffiliate((cp as any).has_tiktok_affiliate);
+        if (cp.payment_method) setPaymentMethod(cp.payment_method as PaymentMethod);
+        if (cp.payment_handle) setPaymentHandle(cp.payment_handle);
       }
     };
     load();
@@ -120,7 +145,7 @@ const OnboardingCreator = () => {
         .from("creator_profiles")
         .select("id")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (existing) {
         await supabase.from("creator_profiles").update(creatorData as any).eq("user_id", user.id);
@@ -186,7 +211,19 @@ const OnboardingCreator = () => {
     await saveAndAdvance(5, {}, { has_tiktok_affiliate: affiliate });
   };
 
-  // Step 5 — Photos & finish
+  // Step 5 — Payment
+  const handleStep5 = async () => {
+    if (!paymentMethod || !paymentHandle.trim()) {
+      toast({ title: "Both payment fields are required", variant: "destructive" });
+      return;
+    }
+    await saveAndAdvance(6, {}, {
+      payment_method: paymentMethod,
+      payment_handle: paymentHandle.trim(),
+    });
+  };
+
+  // Step 6 — Photos & finish
   const handleFinish = async () => {
     if (!user) return;
     setSaving(true);
@@ -206,8 +243,12 @@ const OnboardingCreator = () => {
         onboarding_completed: true,
         onboarding_step: null,
       } as any).eq("id", user.id);
+      // Also save to creator_profiles so BrandFeed can read portfolio_urls
+      await supabase.from("creator_profiles").update({
+        portfolio_urls: urls,
+      } as any).eq("user_id", user.id);
       await refreshProfile();
-      navigate("/feed", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
@@ -215,7 +256,13 @@ const OnboardingCreator = () => {
     }
   };
 
-  const goBack = () => setStep((s) => Math.max(1, s - 1));
+  const goBack = async () => {
+    const prev = Math.max(1, step - 1);
+    setStep(prev);
+    if (user) {
+      await supabase.from("profiles").update({ onboarding_step: `creator-${prev}` }).eq("id", user.id);
+    }
+  };
 
   if (loading || !user) {
     return (
@@ -231,7 +278,7 @@ const OnboardingCreator = () => {
       totalSteps={TOTAL_STEPS}
       showBack={step > 1}
       onBack={goBack}
-      showSkip={step === 5}
+      showSkip={step === 6}
       onSkip={async () => {
         if (!user) return;
         await supabase.from("profiles").update({
@@ -239,14 +286,14 @@ const OnboardingCreator = () => {
           onboarding_step: null,
         }).eq("id", user.id);
         await refreshProfile();
-        navigate("/feed", { replace: true });
+        navigate("/dashboard", { replace: true });
       }}
     >
       {/* Step 1 — Welcome & Basics */}
       {step === 1 && (
         <div className="space-y-8">
           <div className="text-center">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Welcome to GMB.live 👋</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Welcome to GMV.live 👋</h1>
             <p className="mt-2 text-lg text-muted-foreground">Let's set up your creator profile</p>
           </div>
 
@@ -362,8 +409,64 @@ const OnboardingCreator = () => {
         </div>
       )}
 
-      {/* Step 5 — Photos */}
+      {/* Step 5 — Payment Setup */}
       {step === 5 && (
+        <div className="space-y-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Payment setup 💰</h1>
+            <p className="mt-2 text-lg text-muted-foreground">How should brands pay you?</p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Payment Method *</Label>
+              <Select
+                value={paymentMethod}
+                onValueChange={(val) => setPaymentMethod(val as PaymentMethod)}
+              >
+                <SelectTrigger className="min-h-[48px] text-base">
+                  <SelectValue placeholder="Select payment method" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_METHODS.map((method) => (
+                    <SelectItem key={method} value={method}>
+                      {method}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Handle / ID *</Label>
+              <Input
+                value={paymentHandle}
+                onChange={(e) => setPaymentHandle(e.target.value)}
+                placeholder={paymentMethod ? PAYMENT_PLACEHOLDERS[paymentMethod as PaymentMethod] : "Select a method first"}
+                className="min-h-[48px] text-base"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3">
+              <Lock className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
+                This is only shown to brands after your contract is signed
+              </p>
+            </div>
+          </div>
+
+          <Button
+            onClick={handleStep5}
+            disabled={saving || !paymentMethod || !paymentHandle.trim()}
+            className="w-full min-h-[52px] text-base font-semibold"
+          >
+            {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : "Continue"}
+          </Button>
+        </div>
+      )}
+
+      {/* Step 6 — Photos */}
+      {step === 6 && (
         <div className="space-y-8">
           <div className="text-center">
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Show your style 📸</h1>

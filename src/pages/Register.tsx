@@ -64,7 +64,7 @@ const Register = () => {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <Link to="/" className="mb-2 text-xl font-bold text-foreground">GMB.live</Link>
+          <Link to="/" className="mb-2 text-xl font-bold text-foreground">GMV.live</Link>
           <CardTitle className="text-2xl">Create your account</CardTitle>
           <CardDescription>Join the live shopping network</CardDescription>
         </CardHeader>

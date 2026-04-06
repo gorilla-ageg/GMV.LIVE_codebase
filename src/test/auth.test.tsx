@@ -47,10 +47,10 @@ describe("Auth Page", () => {
     expect(screen.getByText("Log In")).toBeInTheDocument();
   });
 
-  it("renders GMB.live branding", () => {
+  it("renders GMV.live branding", () => {
     renderAuth();
-    expect(screen.getByText("Welcome to GMB.live")).toBeInTheDocument();
-    expect(screen.getByText("GMB.live")).toBeInTheDocument();
+    expect(screen.getByText("Welcome to GMV.live")).toBeInTheDocument();
+    expect(screen.getByText("GMV.live")).toBeInTheDocument();
   });
 
   it("does not render Google OAuth button", () => {

@@ -105,10 +105,15 @@ const OnboardingBrand = () => {
     return data.publicUrl;
   };
 
-  const goBack = () => {
+  const goBack = async () => {
     if (step > 1) {
-      setStep(step - 1);
-      supabase.from("profiles").update({ onboarding_step: `brand-${step - 1}` }).eq("id", user!.id);
+      const prev = step - 1;
+      try {
+        await supabase.from("profiles").update({ onboarding_step: `brand-${prev}` }).eq("id", user!.id);
+        setStep(prev);
+      } catch (err: any) {
+        toast({ title: "Error going back", description: err.message, variant: "destructive" });
+      }
     }
   };
 
@@ -132,7 +137,7 @@ const OnboardingBrand = () => {
       }).eq("id", user.id);
 
       // Upsert brand_profiles
-      const { data: existing } = await supabase.from("brand_profiles").select("id").eq("user_id", user.id).single();
+      const { data: existing } = await supabase.from("brand_profiles").select("id").eq("user_id", user.id).maybeSingle();
       if (existing) {
         await supabase.from("brand_profiles").update({
           company_name: brandName, website: website || null, industries, logo_url: logoUrl,
@@ -177,7 +182,7 @@ const OnboardingBrand = () => {
         .eq("brand_id", user.id)
         .order("created_at", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (existingProduct) {
         await supabase.from("products").update({
@@ -226,7 +231,7 @@ const OnboardingBrand = () => {
         .eq("brand_id", user.id)
         .order("created_at", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (product) {
         await supabase.from("products").update({
@@ -248,9 +253,13 @@ const OnboardingBrand = () => {
 
   const finish = async (destination: string) => {
     if (!user) return;
-    await supabase.from("profiles").update({ onboarding_completed: true, onboarding_step: null }).eq("id", user.id);
-    await refreshProfile();
-    navigate(destination, { replace: true });
+    try {
+      await supabase.from("profiles").update({ onboarding_completed: true, onboarding_step: null }).eq("id", user.id);
+      await refreshProfile();
+      navigate(destination, { replace: true });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
   };
 
   if (loading || !user) {
@@ -268,8 +277,8 @@ const OnboardingBrand = () => {
       showBack={step > 1 && step < 4}
       onBack={goBack}
       showSkip={step === 2}
-      onSkip={() => {
-        supabase.from("profiles").update({ onboarding_step: "brand-3" }).eq("id", user!.id);
+      onSkip={async () => {
+        await supabase.from("profiles").update({ onboarding_step: "brand-3" }).eq("id", user!.id);
         setStep(3);
       }}
     >

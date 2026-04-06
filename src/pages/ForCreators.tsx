@@ -69,7 +69,7 @@ const steps = [
     step: 2,
     title: "Get Booked by Top Brands",
     description:
-      "Chat directly with brands, negotiate your rates, and lock in live stream deals, all inside GMB.live.",
+      "Chat directly with brands, negotiate your rates, and lock in live stream deals, all inside GMV.live.",
   },
   {
     step: 3,
@@ -92,15 +92,15 @@ const faqs = [
     a: "A live shopping host is a creator who sells products in real-time on platforms like TikTok Shop, Amazon Live, or brand websites. Hosts engage audiences, demo products, and drive sales during live streams.",
   },
   {
-    q: "How do I get booked on GMB.live?",
+    q: "How do I get booked on GMV.live?",
     a: "Once your profile is live, brands can discover you through our marketplace, view your portfolio, and reach out directly with product offers and stream opportunities.",
   },
   {
-    q: "Does GMB.live take a cut of my earnings?",
-    a: "GMB.live does not take a percentage of your sales commissions. We charge brands a platform fee. Your rates stay yours.",
+    q: "Does GMV.live take a cut of my earnings?",
+    a: "GMV.live does not take a percentage of your sales commissions. We charge brands a platform fee. Your rates stay yours.",
   },
   {
-    q: "What platforms does GMB.live support?",
+    q: "What platforms does GMV.live support?",
     a: "We support TikTok Shop, Amazon Live, Instagram Live, YouTube Live, and custom brand storefronts. More platforms are added regularly.",
   },
   {
@@ -318,7 +318,7 @@ const ForCreators = () => {
               How It Works
             </h2>
             <p className="mx-auto mt-3 sm:mt-4 max-w-xl text-center text-sm sm:text-base text-muted-foreground">
-              From sign-up to payout. Here's how <em>GMB.live</em> works for creators.
+              From sign-up to payout. Here's how <em>GMV.live</em> works for creators.
             </p>
 
             <div className="mt-10 sm:mt-14 space-y-8 sm:space-y-12">
@@ -427,7 +427,7 @@ const ForCreators = () => {
               Join Hundreds of Live Hosts
             </h2>
             <p className="mx-auto mt-3 sm:mt-4 max-w-xl text-sm sm:text-base text-muted-foreground">
-              Focus on selling live for the best brands. Hundreds of hosts have already joined <em>GMB.live</em>. Now it's your turn!
+              Focus on selling live for the best brands. Hundreds of hosts have already joined <em>GMV.live</em>. Now it's your turn!
             </p>
             <div className="mt-8 sm:mt-10 flex flex-col items-center gap-3 sm:gap-4">
               <Button
@@ -436,7 +436,7 @@ const ForCreators = () => {
                 asChild
               >
                 <Link to="/auth">
-                  Join <em>GMB.live</em> <ChevronRight className="ml-1.5 h-4 w-4" />
+                  Join <em>GMV.live</em> <ChevronRight className="ml-1.5 h-4 w-4" />
                 </Link>
               </Button>
               <Link
@@ -455,8 +455,8 @@ const ForCreators = () => {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-8 sm:grid-cols-3">
             <div>
-              <p className="text-base sm:text-lg font-bold text-foreground"><em>GMB.live</em></p>
-              <p className="mt-2 text-xs sm:text-sm text-muted-foreground">support@GMB.live</p>
+              <p className="text-base sm:text-lg font-bold text-foreground"><em>GMV.live</em></p>
+              <p className="mt-2 text-xs sm:text-sm text-muted-foreground">support@GMV.live</p>
             </div>
             <div className="space-y-2 text-sm text-muted-foreground">
               <Link to="/for-brands" className="block hover:text-foreground">For Brands</Link>
@@ -469,7 +469,7 @@ const ForCreators = () => {
             </div>
           </div>
           <p className="mt-8 text-xs text-muted-foreground">
-            © {new Date().getFullYear()} <em>GMB.live</em>. All rights reserved.
+            © {new Date().getFullYear()} <em>GMV.live</em>. All rights reserved.
           </p>
         </div>
       </footer>
