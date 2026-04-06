@@ -31,7 +31,8 @@ interface DeleteTarget {
 const AdminDashboard = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState("users");
+  const urlTab = new URLSearchParams(window.location.search).get("tab");
+  const [tab, setTab] = useState(urlTab || "gmv-store");
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [expandedBrand, setExpandedBrand] = useState<string | null>(null);
   const [expandedCreator, setExpandedCreator] = useState<string | null>(null);

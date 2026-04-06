@@ -15,7 +15,7 @@ import {
 import {
   LogOut, MessageSquare, Package, User, Settings,
   Handshake, Menu, X, LayoutDashboard, Plus, ChevronLeft,
-  ShieldCheck, Search,
+  ShieldCheck, Search, Store, Users, BarChart3, Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,17 +24,26 @@ interface NavItem {
   path: string;
   icon: React.ReactNode;
   roles?: ("brand" | "creator" | "admin")[];
+  section?: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
+  // Brand & Creator nav
   { label: "Dashboard", path: "/dashboard", icon: <LayoutDashboard className="h-5 w-5" />, roles: ["brand", "creator"] },
   { label: "Browse Creators", path: "/browse", icon: <Search className="h-5 w-5" />, roles: ["brand"] },
   { label: "Browse Products", path: "/browse", icon: <Search className="h-5 w-5" />, roles: ["creator"] },
-  { label: "Deals", path: "/deals", icon: <Handshake className="h-5 w-5" />, roles: ["brand", "creator", "admin"] },
+  { label: "Deals", path: "/deals", icon: <Handshake className="h-5 w-5" />, roles: ["brand", "creator"] },
   { label: "Products", path: "/my-products", icon: <Package className="h-5 w-5" />, roles: ["brand"] },
   { label: "Profile", path: "/profile", icon: <User className="h-5 w-5" />, roles: ["brand", "creator"] },
   { label: "Settings", path: "/settings/profile", icon: <Settings className="h-5 w-5" />, roles: ["brand", "creator"] },
-  { label: "Admin Dashboard", path: "/admin", icon: <ShieldCheck className="h-5 w-5" />, roles: ["admin"] },
+
+  // Admin nav — organized by section
+  { label: "Overview", path: "/admin", icon: <BarChart3 className="h-5 w-5" />, roles: ["admin"], section: "Admin" },
+  { label: "GMV Store", path: "/admin?tab=gmv-store", icon: <Store className="h-5 w-5" />, roles: ["admin"], section: "Manage" },
+  { label: "Deals", path: "/deals", icon: <Handshake className="h-5 w-5" />, roles: ["admin"], section: "Manage" },
+  { label: "Browse Creators", path: "/browse", icon: <Users className="h-5 w-5" />, roles: ["admin"], section: "Manage" },
+  { label: "Browse Products", path: "/feed", icon: <Eye className="h-5 w-5" />, roles: ["admin"], section: "Manage" },
+  { label: "Settings", path: "/settings/profile", icon: <Settings className="h-5 w-5" />, roles: ["admin"], section: "Account" },
 ];
 
 const AppLayout = ({ children }: { children: ReactNode }) => {
@@ -64,7 +73,17 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
     navigate("/");
   };
 
-  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + "/");
+  const isActive = (path: string) => {
+    const [pathname, query] = path.split("?");
+    if (query) {
+      return location.pathname === pathname && location.search.includes(query);
+    }
+    // For /admin without query, only match exact (not /admin?tab=...)
+    if (pathname === "/admin" && role === "admin") {
+      return location.pathname === "/admin" && !location.search;
+    }
+    return location.pathname === pathname || location.pathname.startsWith(pathname + "/");
+  };
 
   const initials = (profile?.display_name || "")
     .split(" ")
@@ -105,25 +124,41 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
       </div>
 
       {/* Nav items */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
-        {filteredNav.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            onClick={() => setSidebarOpen(false)}
-            className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-              collapsed && "justify-center px-2",
-              isActive(item.path)
-                ? "bg-primary/10 text-primary border border-primary/20"
-                : "text-muted-foreground hover:bg-accent/10 hover:text-foreground"
-            )}
-            title={collapsed ? item.label : undefined}
-          >
-            {item.icon}
-            {!collapsed && <span>{item.label}</span>}
-          </Link>
-        ))}
+      <nav className="flex-1 px-3 py-4">
+        {(() => {
+          let lastSection = "";
+          return filteredNav.map((item, idx) => {
+            const showSection = role === "admin" && item.section && item.section !== lastSection;
+            if (item.section) lastSection = item.section;
+            return (
+              <div key={`${item.label}-${item.path}-${idx}`}>
+                {showSection && !collapsed && (
+                  <p className={cn("text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 px-3 mb-1", idx > 0 && "mt-5")}>
+                    {item.section}
+                  </p>
+                )}
+                {showSection && collapsed && idx > 0 && (
+                  <div className="my-3 mx-2 border-t border-border/30" />
+                )}
+                <Link
+                  to={item.path}
+                  onClick={() => setSidebarOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors mb-0.5",
+                    collapsed && "justify-center px-2",
+                    isActive(item.path)
+                      ? "bg-primary/10 text-primary border border-primary/20"
+                      : "text-muted-foreground hover:bg-accent/10 hover:text-foreground"
+                  )}
+                  title={collapsed ? item.label : undefined}
+                >
+                  {item.icon}
+                  {!collapsed && <span>{item.label}</span>}
+                </Link>
+              </div>
+            );
+          });
+        })()}
 
         {role === "brand" && (
           <Button

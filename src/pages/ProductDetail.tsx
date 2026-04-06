@@ -44,22 +44,23 @@ const ProductDetail = () => {
   const handleStartConversation = async () => {
     if (!user || !product) return;
 
-    // Check for existing conversation with this brand
-    const { data: existing } = await supabase
+    // Check for existing conversation for THIS specific product
+    const { data: existingForProduct } = await supabase
       .from("conversations")
       .select("id, deals(id)")
       .eq("brand_user_id", product.brand_id)
       .eq("creator_user_id", user.id)
+      .eq("product_id", product.id)
       .maybeSingle();
 
-    if (existing) {
-      const dealId = (existing.deals as { id: string }[])?.[0]?.id;
+    if (existingForProduct) {
+      const dealId = (existingForProduct.deals as { id: string }[])?.[0]?.id;
       if (dealId) {
         navigate(`/deals/${dealId}`);
       } else {
         const { data: deal, error } = await supabase
           .from("deals")
-          .insert({ conversation_id: existing.id, status: "negotiating" as never })
+          .insert({ conversation_id: existingForProduct.id, status: "negotiating" as never })
           .select()
           .single();
         if (error) {
@@ -71,7 +72,24 @@ const ProductDetail = () => {
       return;
     }
 
-    // Create conversation + deal
+    // Also check for any conversation with this brand (without product_id) — redirect to existing deal
+    const { data: existingAny } = await supabase
+      .from("conversations")
+      .select("id, deals(id)")
+      .eq("brand_user_id", product.brand_id)
+      .eq("creator_user_id", user.id)
+      .limit(1)
+      .maybeSingle();
+
+    if (existingAny) {
+      const dealId = (existingAny.deals as { id: string }[])?.[0]?.id;
+      if (dealId) {
+        navigate(`/deals/${dealId}`);
+        return;
+      }
+    }
+
+    // Create new conversation + deal for this product
     const { data: convo, error: convoErr } = await supabase
       .from("conversations")
       .insert({ brand_user_id: product.brand_id, creator_user_id: user.id, product_id: product.id })
