@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useStreamChat } from "@/contexts/StreamChatContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -72,40 +71,60 @@ const CreatorDetail = () => {
     enabled: !!id,
   });
 
-  const { client: streamClient } = useStreamChat();
-
   const handleStartConversation = async () => {
     if (!user || !creator) return;
 
-    // Create a Stream Chat channel for direct messaging
-    const channelId = [user.id, creator.user_id].sort().join("-");
-
-    if (streamClient) {
-      try {
-        const channel = streamClient.channel("messaging", channelId, {
-          members: [user.id, creator.user_id],
-        });
-        await channel.create();
-      } catch (err) {
-        console.error("Failed to create Stream channel:", err);
-      }
-    }
-
-    // Also create Supabase conversation for deal tracking
+    // Check for existing conversation
     const { data: existing } = await supabase
       .from("conversations")
-      .select("id")
+      .select("id, deals(id)")
       .eq("brand_user_id", user.id)
       .eq("creator_user_id", creator.user_id)
       .maybeSingle();
 
-    if (!existing) {
-      await supabase
-        .from("conversations")
-        .insert({ brand_user_id: user.id, creator_user_id: creator.user_id });
+    if (existing) {
+      // If deal exists, go to deal room; otherwise create one
+      const dealId = (existing.deals as { id: string }[])?.[0]?.id;
+      if (dealId) {
+        navigate(`/deals/${dealId}`);
+      } else {
+        // Create deal for this conversation
+        const { data: deal, error } = await supabase
+          .from("deals")
+          .insert({ conversation_id: existing.id, status: "negotiating" as never })
+          .select()
+          .single();
+        if (error) {
+          toast({ title: "Error", description: error.message, variant: "destructive" });
+          return;
+        }
+        navigate(`/deals/${deal.id}`);
+      }
+      return;
     }
 
-    navigate(`/messages/${channelId}`);
+    // Create conversation + deal
+    const { data: convo, error: convoErr } = await supabase
+      .from("conversations")
+      .insert({ brand_user_id: user.id, creator_user_id: creator.user_id })
+      .select()
+      .single();
+    if (convoErr) {
+      toast({ title: "Error", description: convoErr.message, variant: "destructive" });
+      return;
+    }
+
+    const { data: deal, error: dealErr } = await supabase
+      .from("deals")
+      .insert({ conversation_id: convo.id, status: "negotiating" as never })
+      .select()
+      .single();
+    if (dealErr) {
+      toast({ title: "Error", description: dealErr.message, variant: "destructive" });
+      return;
+    }
+
+    navigate(`/deals/${deal.id}`);
   };
 
   const sendOfferMutation = useMutation({

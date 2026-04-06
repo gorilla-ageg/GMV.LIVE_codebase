@@ -31,7 +31,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Browse Creators", path: "/browse", icon: <Search className="h-5 w-5" />, roles: ["brand"] },
   { label: "Browse Products", path: "/browse", icon: <Search className="h-5 w-5" />, roles: ["creator"] },
   { label: "Deals", path: "/deals", icon: <Handshake className="h-5 w-5" />, roles: ["brand", "creator"] },
-  { label: "Messages", path: "/messages", icon: <MessageSquare className="h-5 w-5" />, roles: ["brand", "creator"] },
   { label: "Products", path: "/my-products", icon: <Package className="h-5 w-5" />, roles: ["brand"] },
   { label: "Profile", path: "/profile", icon: <User className="h-5 w-5" />, roles: ["brand", "creator"] },
   { label: "Settings", path: "/settings/profile", icon: <Settings className="h-5 w-5" />, roles: ["brand", "creator"] },

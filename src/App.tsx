@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { StreamChatProvider } from "@/contexts/StreamChatContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -15,15 +14,12 @@ import Auth from "./pages/Auth";
 import OnboardingRole from "./pages/OnboardingRole";
 import OnboardingBrand from "./pages/OnboardingBrand";
 import OnboardingCreator from "./pages/OnboardingCreator";
-
 import Feed from "./pages/Feed";
 import Dashboard from "./pages/Dashboard";
 import ProductDetail from "./pages/ProductDetail";
 import CreatorDetail from "./pages/CreatorDetail";
 import MyProducts from "./pages/MyProducts";
 import NewProduct from "./pages/NewProduct";
-import Messages from "./pages/Messages";
-import ConversationThread from "./pages/ConversationThread";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import ForCreators from "./pages/ForCreators";
@@ -46,7 +42,6 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <StreamChatProvider>
             <ScrollToTop />
             <Routes>
               <Route path="/" element={<ForCreators />} />
@@ -73,8 +68,8 @@ const App = () => (
               <Route path="/products/:id/edit" element={<ProtectedRoute requiredRole="brand"><EditProduct /></ProtectedRoute>} />
               <Route path="/deals" element={<ProtectedRoute><DealInbox /></ProtectedRoute>} />
               <Route path="/deals/:id" element={<ProtectedRoute><DealRoom /></ProtectedRoute>} />
-              <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
-              <Route path="/messages/:id" element={<ProtectedRoute><ConversationThread /></ProtectedRoute>} />
+              <Route path="/messages" element={<Navigate to="/deals" replace />} />
+              <Route path="/messages/:id" element={<Navigate to="/deals" replace />} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/settings" element={<Navigate to="/settings/profile" replace />} />
               <Route path="/settings/profile" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
@@ -82,7 +77,6 @@ const App = () => (
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-            </StreamChatProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
