@@ -60,16 +60,16 @@ const Pricing = () => {
       {/* ═══════════════════════════════════════════
           HERO — Left copy + Right pricing cards
       ═══════════════════════════════════════════ */}
-      <section className="relative overflow-hidden pt-28 sm:pt-36 lg:pt-44 pb-24 sm:pb-32 lg:pb-40">
+      <section className="relative overflow-hidden pt-[126px] sm:pt-[142px] lg:pt-[142px] pb-16 sm:pb-20 lg:pb-24">
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,hsl(349,98%,56%,0.06),transparent_50%)]" />
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
             {/* Left — copy */}
-            <div className="lg:sticky lg:top-32 lg:pt-8">
-              <div className="inline-flex items-center gap-3 mb-8 rounded-2xl border border-primary/20 bg-primary/5 px-5 py-2.5">
+            <div>
+              <div className="inline-flex items-center gap-3 mb-6 rounded-2xl border border-primary/20 bg-primary/5 px-5 py-2.5">
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/20">
                   <DollarSign className="h-3.5 w-3.5 text-primary" />
                 </div>
@@ -82,12 +82,12 @@ const Pricing = () => {
                 <span className="text-primary">when you win.</span>
               </h1>
 
-              <p className="mt-6 max-w-md text-lg leading-relaxed text-muted-foreground">
+              <p className="mt-5 max-w-md text-lg leading-relaxed text-muted-foreground">
                 No subscriptions. No upfront costs. Just a small success fee
                 when a campaign actually delivers results.
               </p>
 
-              <div className="mt-8 flex flex-wrap gap-4">
+              <div className="mt-7 flex flex-wrap gap-4">
                 <Button size="lg" className="rounded-full px-8 text-base font-bold shadow-lg shadow-primary/20 h-12" asChild>
                   <Link to="/auth">Get Started Free <ArrowRight className="ml-2 h-4 w-4" /></Link>
                 </Button>
@@ -96,32 +96,32 @@ const Pricing = () => {
                 </a>
               </div>
 
-              <div className="mt-10 flex flex-col gap-3 text-sm text-muted-foreground">
+              <div className="mt-8 flex flex-col gap-2.5 text-sm text-muted-foreground">
                 <span className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-400" /> No credit card required</span>
                 <span className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-400" /> Cancel anytime</span>
                 <span className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-400" /> Money-back guarantee</span>
               </div>
             </div>
 
-            {/* Right — pricing cards stacked */}
-            <div className="space-y-5">
-              {/* For Brands — highlighted */}
-              <div className="rounded-2xl border-2 border-primary bg-card p-6 sm:p-8 relative">
+            {/* Right — pricing cards */}
+            <div className="space-y-4">
+              {/* For Brands — highlighted, on top */}
+              <div className="rounded-2xl border-2 border-primary bg-card p-6 relative">
                 <Badge className="absolute -top-3 right-6 bg-primary text-primary-foreground text-xs px-3 py-1">Most Popular</Badge>
                 <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-2">For Brands</p>
                 <div className="flex items-baseline gap-1 mb-1">
                   <span className="text-3xl font-black text-foreground">$0</span>
                   <span className="text-muted-foreground text-sm">to start</span>
                 </div>
-                <p className="text-sm text-muted-foreground mb-6">Pay per campaign. Small commission on successful bookings.</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-6">
+                <p className="text-sm text-muted-foreground mb-5">Small commission on successful bookings.</p>
+                <div className="grid grid-cols-2 gap-2 mb-5">
                   {[
-                    "Browse all creators for free",
-                    "Direct messaging & deal rooms",
+                    "Browse all creators free",
+                    "Deal rooms & messaging",
                     "Offer negotiation",
                     "E-signed contracts",
-                    "Secure escrow payments",
-                    "Real-time stream analytics",
+                    "Escrow payments",
+                    "Stream analytics",
                     "Shipment tracking",
                     "Money-back guarantee",
                   ].map((item) => (
@@ -136,57 +136,43 @@ const Pricing = () => {
                 </Button>
               </div>
 
-              {/* Bottom row: Creator + Enterprise side by side */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {/* For Creators */}
-                <div className="rounded-2xl border border-border bg-card p-6 flex flex-col">
+              {/* Creator + Enterprise side by side */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-2xl border border-border bg-card p-5 flex flex-col">
                   <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">For Creators</p>
                   <div className="flex items-baseline gap-1 mb-1">
-                    <span className="text-3xl font-black text-foreground">$0</span>
-                    <span className="text-muted-foreground text-sm">/forever</span>
+                    <span className="text-2xl font-black text-foreground">$0</span>
+                    <span className="text-muted-foreground text-xs">/forever</span>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-5">Keep 100% of your earnings.</p>
-                  <div className="space-y-2.5 flex-1">
-                    {[
-                      "Free profile",
-                      "Get discovered by brands",
-                      "E-signed contracts",
-                      "Keep all commissions",
-                      "Venmo / PayPal / Zelle",
-                    ].map((item) => (
-                      <div key={item} className="flex items-start gap-2 text-sm">
+                  <p className="text-xs text-muted-foreground mb-4">Keep 100% of earnings.</p>
+                  <div className="space-y-2 flex-1">
+                    {["Free profile", "Get discovered", "E-signed contracts", "Keep all commissions", "Venmo / PayPal / Zelle"].map((item) => (
+                      <div key={item} className="flex items-start gap-1.5 text-xs">
                         <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0 mt-0.5" />
                         <span className="text-foreground">{item}</span>
                       </div>
                     ))}
                   </div>
-                  <Button className="w-full mt-6 rounded-full h-10 text-sm" variant="outline" asChild>
+                  <Button className="w-full mt-5 rounded-full h-9 text-xs" variant="outline" asChild>
                     <Link to="/auth">Join as Creator</Link>
                   </Button>
                 </div>
 
-                {/* Enterprise */}
-                <div className="rounded-2xl border border-border bg-card p-6 flex flex-col">
+                <div className="rounded-2xl border border-border bg-card p-5 flex flex-col">
                   <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Enterprise</p>
                   <div className="flex items-baseline gap-1 mb-1">
-                    <span className="text-3xl font-black text-foreground">Custom</span>
+                    <span className="text-2xl font-black text-foreground">Custom</span>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-5">Volume pricing + dedicated support.</p>
-                  <div className="space-y-2.5 flex-1">
-                    {[
-                      "Everything in Brand plan",
-                      "Account manager",
-                      "Multi-host campaigns",
-                      "Volume discounts",
-                      "Custom reporting",
-                    ].map((item) => (
-                      <div key={item} className="flex items-start gap-2 text-sm">
+                  <p className="text-xs text-muted-foreground mb-4">Volume + dedicated support.</p>
+                  <div className="space-y-2 flex-1">
+                    {["Everything in Brand", "Account manager", "Multi-host campaigns", "Volume discounts", "Custom reporting"].map((item) => (
+                      <div key={item} className="flex items-start gap-1.5 text-xs">
                         <Check className="h-3.5 w-3.5 text-accent shrink-0 mt-0.5" />
                         <span className="text-foreground">{item}</span>
                       </div>
                     ))}
                   </div>
-                  <Button className="w-full mt-6 rounded-full h-10 text-sm" variant="outline" asChild>
+                  <Button className="w-full mt-5 rounded-full h-9 text-xs" variant="outline" asChild>
                     <a href="#contact">Contact Sales</a>
                   </Button>
                 </div>
